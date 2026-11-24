@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #233c7c;
+  --color-brand-hover: #172b61;
+  --color-accent: #cd0e11;
+  --color-accent-hover: #a4080d;
+  --color-canvas: #f6f7fb;
+  --color-ink: #182238;
+  --color-muted: #48556c;
+  --color-border: #788599;
+  --color-success: #176047;
+  --color-success-surface: #eefaf2;
+  --color-warning: #734a09;
+  --color-warning-surface: #fff5e0;
+  --color-error-surface: #fff0f0;
+  --font-sans: "Inter Variable", Arial, sans-serif;
+  --font-display: "Manrope Variable", Arial, sans-serif;
+}
+
+@layer base {
+  :root { --motion-feedback: 200ms; }
+  body { @apply bg-canvas text-ink; }
+  h1, h2, h3, h4 { @apply font-display; }
+
+  :focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root { --motion-feedback: 0ms; }
+  }
+}
+
+@layer components {
+  .ui-action {
+    @apply inline-flex min-h-11 max-w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-center font-semibold;
+    transition-property: background-color, color, border-color;
+    transition-duration: var(--motion-feedback);
+  }
+  .ui-action:disabled { @apply cursor-not-allowed bg-canvas text-muted; }
+  .ui-action[data-size="large"] { @apply min-h-12 px-5 sm:px-6; }
+  .ui-action[data-tone="primary"]:not(:disabled) { @apply bg-brand text-white hover:bg-brand-hover; }
+  .ui-action[data-tone="secondary"]:not(:disabled) { @apply border border-brand bg-white text-brand hover:bg-canvas; }
+  .ui-action[data-tone="danger"]:not(:disabled) { @apply bg-accent text-white hover:bg-accent-hover; }
+
+  .ui-link {
+    @apply inline-flex min-h-11 items-center font-semibold text-brand underline underline-offset-4 hover:text-brand-hover;
+  }
+
+  .ui-field {
+    @apply min-h-11 w-full rounded-xl border border-border bg-white px-3 py-2 text-ink disabled:cursor-not-allowed disabled:bg-canvas;
+    transition: border-color var(--motion-feedback);
+  }
+  .ui-field[aria-invalid="true"] { @apply border-accent; }
+
+  .ui-dialog::backdrop { background: rgb(24 34 56 / 68%); }
+
+  .ui-skeleton {
+    @apply min-h-20 rounded-xl bg-canvas;
+    animation: skeleton-highlight 220ms ease-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-skeleton { animation: none; }
+  }
+}
+
+@keyframes skeleton-highlight {
+  from { opacity: 0.65; }
+  to { opacity: 1; }
+}
