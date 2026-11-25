@@ -11,7 +11,8 @@ test("el acceso presenta controles accesibles y la recuperación no revela cuent
   await expect(page.getByRole("alert").filter({ hasText: "no está disponible" })).toBeVisible();
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
   await page.getByRole("link", { name: "Recuperar contraseña" }).click();
-  await page.getByRole("textbox", { name: /Correo electrónico/ }).fill("desconocido@example.test");
+  await expect(page).toHaveURL(/\/recuperar$/);
+  await page.locator("#recovery-email").fill("desconocido@example.test");
   await page.getByRole("button", { name: "Solicitar enlace" }).click();
   await expect(page.getByText(/Si la cuenta puede recuperarse/)).toBeVisible();
   await page.goto("/restablecer");

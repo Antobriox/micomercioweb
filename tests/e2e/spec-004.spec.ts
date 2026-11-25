@@ -32,8 +32,8 @@ test("la cabecera móvil conserva accesos, foco y destinos", async ({ page }) =>
 test("los accesos de escritorio, búsqueda y contador funcionan sin cuenta", async ({ page, request }) => {
   await page.goto("/");
   await expect(page.getByRole("navigation", { name: "Navegación principal" })).toBeVisible();
-  await page.getByRole("searchbox", { name: "Buscar productos" }).fill("arroz");
-  await page.getByRole("searchbox", { name: "Buscar productos" }).press("Enter");
+  await page.getByRole("combobox", { name: "Buscar productos" }).fill("arroz");
+  await page.getByRole("combobox", { name: "Buscar productos" }).press("Enter");
   await expect(page).toHaveURL(/\/buscar\?q=arroz/);
   await expect(page.getByRole("heading", { name: "Arroz de prueba" })).toBeVisible();
   await page.evaluate(({ key, event }) => {

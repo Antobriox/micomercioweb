@@ -1,7 +1,8 @@
-const destinations = new Set(["/cuenta", "/admin", "/carrito", "/pedido/confirmar"]);
+const destinations = new Set(["/cuenta", "/cuenta/favoritos", "/admin", "/carrito", "/pedido/confirmar"]);
 
 export function loginDestination(value: unknown) {
-  return typeof value === "string" && destinations.has(value) ? value : "/cuenta";
+  return typeof value === "string" && (destinations.has(value) ||
+    (value.length <= 120 && /^\/producto\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))) ? value : "/cuenta";
 }
 
 export function normalizedEmail(input: unknown) {

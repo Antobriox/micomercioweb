@@ -1,7 +1,7 @@
 # Progreso de Comisariato Mi Comercio Web
 
 **Actualizado el 24 de noviembre de 2026.**  
-**Avance global** · 25,3 % (6 de 34 especificaciones completas).
+**Avance global** · 55,7 % (15 de 34 especificaciones completas).
 
 El avance global es la media de los 34 porcentajes. Cada porcentaje refleja grupos de aceptación implementados y comprobados. El 100 % exige completar todos los criterios y las validaciones aplicables.
 
@@ -18,23 +18,23 @@ SPEC-010 requiere variantes de SPEC-012 y también consume el historial y carrit
 | [SPEC-001](SPECS/SPEC-001.md) | Inicialización y entornos | Ninguna | COMPLETADA | 100 % |
 | [SPEC-002](SPECS/SPEC-002.md) | Arquitectura, contratos y datos simulados | SPEC-001 | COMPLETADA | 100 % |
 | [SPEC-003](SPECS/SPEC-003.md) | Sistema de diseño y componentes UI | SPEC-001 | EN VALIDACIÓN | 90 % |
-| [SPEC-004](SPECS/SPEC-004.md) | Sitemap, layouts y navegación | SPEC-001, SPEC-003 | EN VALIDACIÓN | 90 % |
+| [SPEC-004](SPECS/SPEC-004.md) | Sitemap, layouts y navegación | SPEC-001, SPEC-003 | COMPLETADA | 100 % |
 | [SPEC-005](SPECS/SPEC-005.md) | Modelo web, seguridad de acceso y auditoría | SPEC-001, SPEC-002 | COMPLETADA | 100 % |
 | [SPEC-006](SPECS/SPEC-006.md) | Registro de clientes y validación | SPEC-005, SPEC-003 | COMPLETADA | 100 % |
 | [SPEC-007](SPECS/SPEC-007.md) | Verificación de correo con código | SPEC-006 | COMPLETADA | 100 % |
 | [SPEC-008](SPECS/SPEC-008.md) | Login, sesiones y recuperación | SPEC-005, SPEC-007 | COMPLETADA | 100 % |
-| [SPEC-009](SPECS/SPEC-009.md) | Mi perfil y seguridad de cuenta | SPEC-008, SPEC-005 | EN VALIDACIÓN | 80 % |
-| [SPEC-010](SPECS/SPEC-010.md) | Favoritos y repetición de compras | SPEC-008, SPEC-012 | BLOQUEADA | 0 % |
-| [SPEC-011](SPECS/SPEC-011.md) | Catálogo, categorías y fichas | SPEC-002, SPEC-003, SPEC-004 | PENDIENTE | 0 % |
-| [SPEC-012](SPECS/SPEC-012.md) | Variantes y presentaciones | SPEC-002, SPEC-011 | PENDIENTE | 0 % |
-| [SPEC-013](SPECS/SPEC-013.md) | Búsqueda, filtros y ordenamiento | SPEC-004, SPEC-011 | PENDIENTE | 0 % |
-| [SPEC-014](SPECS/SPEC-014.md) | Promociones y precios de oferta | SPEC-002, SPEC-011 | PENDIENTE | 0 % |
-| [SPEC-015](SPECS/SPEC-015.md) | Recomendaciones en ficha de producto | SPEC-011, SPEC-012 | PENDIENTE | 0 % |
-| [SPEC-016](SPECS/SPEC-016.md) | Carrito persistente de visitante y cliente | SPEC-005, SPEC-011, SPEC-012 | PENDIENTE | 0 % |
-| [SPEC-017](SPECS/SPEC-017.md) | Resumen final y revisión de precios | SPEC-016, SPEC-008, SPEC-002 | PENDIENTE | 0 % |
-| [SPEC-018](SPECS/SPEC-018.md) | Horarios y calendario operativo | SPEC-005 | PENDIENTE | 0 % |
-| [SPEC-019](SPECS/SPEC-019.md) | Franjas de retiro y cupos | SPEC-018, SPEC-005 | PENDIENTE | 0 % |
-| [SPEC-020](SPECS/SPEC-020.md) | Creación de pedidos e idempotencia | SPEC-005, SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 | PENDIENTE | 0 % |
+| [SPEC-009](SPECS/SPEC-009.md) | Mi perfil y seguridad de cuenta | SPEC-008, SPEC-005 | COMPLETADA | 100 % |
+| [SPEC-010](SPECS/SPEC-010.md) | Favoritos y repetición de compras | SPEC-008, SPEC-012 | BLOQUEADA | 50 % |
+| [SPEC-011](SPECS/SPEC-011.md) | Catálogo, categorías y fichas | SPEC-002, SPEC-003, SPEC-004 | COMPLETADA | 100 % |
+| [SPEC-012](SPECS/SPEC-012.md) | Variantes y presentaciones | SPEC-002, SPEC-011 | COMPLETADA | 100 % |
+| [SPEC-013](SPECS/SPEC-013.md) | Búsqueda, filtros y ordenamiento | SPEC-004, SPEC-011 | COMPLETADA | 100 % |
+| [SPEC-014](SPECS/SPEC-014.md) | Promociones y precios de oferta | SPEC-002, SPEC-011 | COMPLETADA | 100 % |
+| [SPEC-015](SPECS/SPEC-015.md) | Recomendaciones en ficha de producto | SPEC-011, SPEC-012 | COMPLETADA | 100 % |
+| [SPEC-016](SPECS/SPEC-016.md) | Carrito persistente de visitante y cliente | SPEC-005, SPEC-011, SPEC-012 | EN VALIDACIÓN | 90 % |
+| [SPEC-017](SPECS/SPEC-017.md) | Resumen final y revisión de precios | SPEC-016, SPEC-008, SPEC-002 | EN VALIDACIÓN | 90 % |
+| [SPEC-018](SPECS/SPEC-018.md) | Horarios y calendario operativo | SPEC-005 | COMPLETADA | 100 % |
+| [SPEC-019](SPECS/SPEC-019.md) | Franjas de retiro y cupos | SPEC-018, SPEC-005 | COMPLETADA | 100 % |
+| [SPEC-020](SPECS/SPEC-020.md) | Creación de pedidos e idempotencia | SPEC-005, SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 | EN VALIDACIÓN | 75 % |
 | [SPEC-021](SPECS/SPEC-021.md) | Seguimiento e historial de pedidos | SPEC-008, SPEC-020 | PENDIENTE | 0 % |
 | [SPEC-022](SPECS/SPEC-022.md) | Cancelaciones de cliente y administrador | SPEC-020, SPEC-021 | PENDIENTE | 0 % |
 | [SPEC-023](SPECS/SPEC-023.md) | Máquina de estados y coordinación manual | SPEC-020, SPEC-022 | PENDIENTE | 0 % |
@@ -152,3 +152,113 @@ SPEC-010 requiere variantes de SPEC-012 y también consume el historial y carrit
 
 - Implementación. Cuenta con datos propios, cédula de solo lectura, edición de contacto con control de versión, nueva verificación de correo en ambos buzones y cambio de contraseña con confirmación de la actual.
 - Archivos. `app/(private)/cuenta/`, `app/auth/correo/route.ts`, migración de contacto, configuración Auth y pruebas de persistencia e integración.
+
+- Verificado. Pasaron lint, tipos, 9 unitarias, 6 PostgreSQL, build y 12 Playwright. La prueba integrada de SPEC-009 pasó con la edición de datos propios, rechazo de correo duplicado, doble confirmación y cambio de contraseña. Se precisó el selector de la prueba para distinguir la sección desplegable de su botón.
+- SPEC-010 queda aplazada por las dependencias ya registradas. Se retoma la parte de favoritos tras SPEC-012 y la repetición cuando existan carrito e historial.
+
+### SPEC-011 · Inicio
+
+- Aceptación. Visitantes pueden recorrer las categorías y fichas, consultar disponibilidad y agregar una presentación vendible al carrito de demostración.
+- Diseño. La capa editorial suministra fotos y descripción de muestra. Precio, existencia y SKU pertenecen al adaptador comercial simulado.
+
+- Implementación. Catálogo con paginación, fichas, migas, foto generada de la bolsa de 1 kg, datos ausentes y agregado al carrito por SKU.
+- Archivos. Rutas `catalogo` y `producto/[slug]`, componentes de catálogo, utilidades comerciales y de carrito, imagen WebP de prueba y regresiones unitarias y de navegador.
+
+- Verificado. Pasaron lint, tipos, 11 unitarias, build y 14 Playwright. La evidencia incluye paginación con 1.001 registros sintéticos, navegación móvil con teclado, descarga real del WebP, regreso a la URL filtrada, agregado y estados agotado, sin foto y sin precio.
+- Queda pendiente corroborar la restauración de la posición vertical en SPEC-004.
+
+### SPEC-012 · Inicio
+
+- Aceptación. Cada presentación actualiza identidad, unidad, precio, stock y límite. El carrito conserva el SKU y rechaza valores fraccionarios o que superen el límite acumulado.
+
+- Implementación. La ficha muestra stock y límite de la presentación elegida. Una única foto se vincula al SKU correspondiente. Se devuelve el foco al selector o cantidad cuando hay un error.
+- Archivos. `product-purchase.tsx`, fixture de caja, prueba de variantes y regresión de posición del catálogo.
+
+- Verificado. Pasaron lint, tipos, 11 unitarias, build y 15 Playwright. Se cubrieron selección obligatoria, cantidad fraccionaria y límites acumulados, precio y stock diferenciados, y líneas separadas por SKU.
+- Se completa SPEC-004. La regresión volvió desde la ficha a la URL filtrada y restauró su posición vertical. La autorización real ya se verificó en SPEC-008.
+
+### SPEC-010 · Favoritos
+
+- Se retoma ahora que existe la ficha y sus variantes. La repetición depende todavía de carrito sincronizado e historial de pedidos.
+
+- Favoritos verificados. Guardar, listar y quitar desde la cuenta funcionaron en integración con Supabase local. La prueba SQL confirmó que otra cuenta no puede leer, insertar o borrar esos registros. La regresión pasó con 11 unitarias, 7 PostgreSQL y 15 Playwright.
+- Queda por implementar repetir pedidos con los precios y existencias vigentes. Se retoma tras SPEC-016 y SPEC-021.
+
+### SPEC-013 · Inicio
+
+- Aceptación. Búsqueda con sugerencias navegables por teclado, filtros combinables por datos de catálogo, orden, total, paginación y regreso a la consulta.
+
+- Implementación. Sugerencias por teclado con miniatura y precio, coincidencias por nombre y marca, filtros combinables, orden estable, contador y paginación en la URL.
+- Archivos. `app/(public)/buscar/`, API de sugerencias, `search-box.tsx`, `search.ts` y pruebas de búsqueda.
+
+- Verificado. Pasaron lint, tipos, 13 unitarias, build y 17 Playwright. Se cubrieron acentos, marcas, caracteres especiales, filtros combinables, total, navegación por teclado y axe en las sugerencias.
+- Incidencias corregidas. Escape cierra las sugerencias conservando la consulta. El enlace explícito de regreso evita que el navegador omita una entrada intermedia del historial y conserva filtros, orden y página en una URL local validada.
+
+### SPEC-014 · Inicio
+
+- Aceptación. Las ofertas muestran datos vigentes de origen, con comparación solo cuando se verifica; el carrito detecta cambios posteriores.
+
+- Implementación. Página de ofertas y filtros, precio fuente vigente, comparación del mismo SKU y moneda, fechas y condiciones. El carrito retiene el importe observado y consulta los precios actuales al abrirse.
+- Archivos. `pricing.ts`, `product-price.tsx`, `promociones/`, API de cotización, estado del carrito y pruebas.
+- Decisión. Una oferta sin precio anterior válido muestra el precio actual sin porcentaje. Ofertas simultáneas sin prioridad verificable conservan el precio base. La reconfirmación al enviar se valida en SPEC-017.
+
+- Verificado. Pasaron lint, tipos, 15 unitarias, build y la prueba específica de comparación y vigencia en ficha y aviso de cambio en el carrito. Las 17 regresiones previas pasaron en la primera ejecución; la prueba nueva se ajustó para esperar la navegación antes de recargar.
+- La oferta actual se consume con datos de demostración. No se introdujo una conexión con Picking.
+
+### SPEC-015 · Inicio
+
+- Aceptación. Recomendar productos que tengan una variante disponible, con ubicación exclusiva en la ficha y sin bloque vacío.
+
+- Implementación. Recomendación por categoría y relaciones de demo, acotada a productos distintos con precio y stock disponibles. La ficha oculta la sección cuando no hay candidatos.
+- Archivos. `recommendations.ts`, ficha, tarjetas y pruebas de selección y vista móvil.
+
+- Verificado. Lint, tipos, build, 16 unitarias y 19 Playwright. Los candidatos inválidos quedan fuera; el bloque aparece solo en fichas con alternativas y está ausente del carrito.
+
+### SPEC-016 · Inicio
+
+- Aceptación. Mostrar y editar líneas por SKU, conservar el carrito de visitante al cerrar o acceder, sincronizar con propiedad de cuenta, y preservar las líneas ante errores.
+- Diseño. El navegador mantiene las líneas anónimas. La cuenta usa PostgreSQL con operaciones por propietario y reintentos idempotentes. Al combinar el mismo SKU se conserva la mayor cantidad y ambas selecciones quedan representadas sin duplicar unidades.
+
+- Implementación. Carrito con líneas editables, subtotal y total, aviso de cotización, estado vacío, persistencia local de visitante y migración a cuenta verificada. Guardado remoto por RPC con recibo idempotente y límite de cantidad calculado por el servidor.
+- Archivos. `carrito/`, API de cotización y cuenta, vista y estado del carrito, migración y pruebas.
+- Pendiente por dependencia. Validar que crear el pedido limpie solo el subconjunto enviado en SPEC-020.
+
+- Verificado. Pasaron lint, tipos, build, 16 unitarias, 8 PostgreSQL y 21 Playwright. La integración confirmó que el carrito anónimo se conserva al iniciar sesión, se sincroniza con la cuenta y reaparece al recargar. La prueba SQL cubrió deduplicación, límites y rollback.
+- Queda pendiente la eliminación selectiva tras persistir un pedido en SPEC-020. El carrito ya está disponible para la revisión de importes.
+
+### SPEC-017 · Inicio
+
+- Aceptación. Vista revisable con importe por línea, estimación en unidades menores y pago en caja. El servidor debe rechazar una aceptación que haya quedado obsoleta y conservar el carrito.
+
+- Implementación. Revisión autenticada con precios y stock vigentes, importe entero por línea, marca de revisión, persistencia de la aceptación y revalidación antes de guardarla. Si cambian las líneas, se vuelve a mostrar el resumen.
+- Archivos. `lib/cart/review.ts`, utilidades de estimación, servicio de revisión, ruta `/pedido/confirmar`, migración de revisiones y pruebas.
+- Dependencia. La hora de retiro y la transferencia de la instantánea al pedido se completan con SPEC-019 y SPEC-020.
+
+- Verificado. Pasaron lint, tipos, build, 18 unitarias, 8 PostgreSQL y 21 Playwright. La integración detectó el cambio de 4,20 a 6,30, pidió revisar otra vez y persistió el importe aceptado de 630 unidades menores en la base. Se mantiene el carrito.
+- Pendiente. La franja y la instantánea del pedido real de prueba se conectan en las siguientes SPECS.
+
+### SPEC-018 · Inicio
+
+- Aceptación. Horarios de Portoviejo, zona America/Guayaquil, límites exclusivos de cierre y administración de pausas y fechas especiales con aviso y auditoría.
+
+- Implementación. Horario habitual, resolución de la hora y ventana web desde PostgreSQL, pausas y excepciones auditadas, edición protegida y aviso público. El sitio informa el horario habitual aunque falte la configuración de la base.
+- Archivos. Migración de calendario, `/admin/calendario`, `/horarios` y pruebas.
+
+- Verificado. Pasaron lint, tipos, build, 18 unitarias, 9 PostgreSQL y 21 Playwright. La integración comprobó pausa editada por el administrador y aviso público. SQL cubrió apertura y cierre exactos en Guayaquil, domingo, feriado, reactivación y rechazo de cambios por clientes.
+
+### SPEC-019 · Inicio
+
+- Aceptación. Mostrar únicamente franjas del mismo día, de 15 minutos y con 30 minutos de anticipación, capacidad y ausencia de pedido activo. Configurar capacidad y cierres sin modificar reservas existentes.
+
+- Implementación. PostgreSQL calcula las franjas sin reservar. La vista permite seleccionarlas, presenta disponibilidad y deja la capacidad inicial en cero hasta que el administrador la configure. Cambios de cupo y cierres conservan reservas.
+- Archivos. Migración de franjas, selector en revisión, editor administrativo y regresiones.
+
+- Verificado. Pasaron lint, tipos, build, 18 unitarias, 10 PostgreSQL y 21 Playwright. SQL comprobó 10:07 → 10:45, límite del domingo, cierre, cupo cero, reservas concurrentes, liberación y permisos. En integración se guardó la capacidad y se mostró el estado sin franjas.
+
+### SPEC-020 · Inicio
+
+- Aceptación. Registrar un pedido de demostración una sola vez, con franja e instantánea aceptada. Cualquier error conserva el carrito. El servidor comercial real sigue desactivado.
+- Diseño. El endpoint autentica al cliente, verifica el catálogo de origen simulado y usa un escritor solo de servidor. PostgreSQL vuelve a verificar cantidad y cupo dentro de la transacción y elimina exclusivamente las líneas incluidas.
+
+- Implementación. Botón de envío solo para demostración, reintentos con el mismo UUID, consulta de recibo, validación final de sesión, precio, horario y franja, persistencia de cabecera/líneas/evento y limpieza selectiva.
+- Archivos. API de pedidos, formulario y recibo, credencial opcional de servidor, migración transaccional y pruebas.

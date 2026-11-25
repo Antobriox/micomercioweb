@@ -53,6 +53,7 @@ before(async () => {
   await owner.query(`
     create role anon nologin;
     create role authenticated nologin;
+    create role service_role nologin bypassrls;
     create schema auth;
     create table auth.users (
       id uuid primary key,
@@ -261,4 +262,143 @@ test("only the customer can update contact fields and a concurrent edit cannot o
   const snapshot = await owner.query("select user_id, national_id, given_names from public.profiles where user_id in ($1, $2)", [users.alice, users.bob]);
   assert.equal(snapshot.rows.find(({ user_id }) => user_id === users.alice)?.national_id, "0000000001");
   assert.equal(snapshot.rows.find(({ user_id }) => user_id === users.bob)?.given_names, "Usuario");
+});
+
+test("favorites cannot be inserted or read under a different owner", async () => {
+  await asRole("authenticated", users.alice, async (client) => {
+    await client.query("insert into public.favorites(user_id, product_id) values ($1, 'demo-arroz')", [users.alice]);
+    await assert.rejects(client.query("insert into public.favorites(user_id, product_id) values ($1, 'demo-arroz')", [users.bob]), code("42501"));
+  });
+  await asRole("authenticated", users.bob, async (client) => {
+    assert.equal((await client.query("select product_id from public.favorites")).rowCount, 0);
+    assert.equal((await client.query("delete from public.favorites where product_id = 'demo-arroz'")).rowCount, 0);
+  });
+});
+
+test("a cart operation is applied once, and merge and failures preserve existing lines", async () => {
+  await asRole("authenticated", users.alice, async (client) => {
+    const key = randomUUID();
+    const change = async (operation: string, intent: string, quantity: number, ceiling: number) => client.query(
+      "select public.change_my_cart($1,$2,$3)", [operation, intent, JSON.stringify([{
+        sku: "demo-cart-test", quantity, ceiling, minor: 210, currency: "USD",
+      }])],
+    );
+    await change(key, "add", 2, 6);
+    await change(key, "add", 2, 6);
+    await change(randomUUID(), "merge", 1, 6);
+    await assert.rejects(change(randomUUID(), "add", 6, 6), code("23514"));
+    assert.equal((await client.query("select quantity from public.cart_items where variant_id = 'demo-cart-test'")).rows[0].quantity, 2);
+    await change(randomUUID(), "set", 0, 0);
+    assert.equal((await client.query("select quantity from public.cart_items where variant_id = 'demo-cart-test'")).rowCount, 0);
+  });
+});
+
+test("operating hours honor Guayaquil time, exclusive closing boundaries, exceptions and pause permissions", async () => {
+  await asRole("anon", null, async (client) => {
+    const at = async (utc: string) => (await client.query(
+      "select accepting, local_time from public.operating_at($1)", [utc],
+    )).rows[0];
+    assert.equal((await at("2026-11-23T11:59:00Z")).accepting, false);
+    assert.deepEqual(await at("2026-11-23T12:00:00Z"), { accepting: true, local_time: "07:00:00" });
+    assert.equal((await at("2026-11-23T21:59:00Z")).accepting, true);
+    assert.equal((await at("2026-11-23T22:00:00Z")).accepting, false);
+    assert.equal((await at("2026-11-29T17:59:00Z")).accepting, true);
+    assert.equal((await at("2026-11-29T18:00:00Z")).accepting, false);
+    await assert.rejects(client.query("select * from public.operating_exceptions"), code("42501"));
+  });
+  await asRole("authenticated", users.alice, async (client) => {
+    assert.equal((await client.query("update public.operating_switch set paused=true, notice='Pausa sin permiso'")).rowCount, 0);
+  });
+  await owner.query("update public.administrators set revoked_at = null where user_id = $1", [users.admin]);
+  await asRole("authenticated", users.admin, async (client) => {
+    await client.query("insert into public.operating_exceptions(day,closed,notice) values ('2026-11-23', true, 'Feriado de prueba')");
+    const day = async () => (await client.query("select accepting,notice from public.operating_at('2026-11-23T15:00:00Z')")).rows[0];
+    assert.deepEqual(await day(), { accepting: false, notice: "Feriado de prueba" });
+    await client.query("delete from public.operating_exceptions where day='2026-11-23'");
+    await client.query("update public.operating_switch set paused=true, notice='Pausa de prueba'");
+    assert.deepEqual(await day(), { accepting: false, notice: "Pausa de prueba" });
+    await client.query("update public.operating_switch set paused=false, notice=null");
+    assert.deepEqual(await day(), { accepting: true, notice: null });
+  });
+});
+
+test("pickup slots respect lead time, same-day opening and closing, capacity and manual configuration", async () => {
+  const options = async (utc: string) => (await owner.query<{ starts_at: string }>(
+    "select starts_at from public.eligible_pickup_times($1)", [utc],
+  )).rows.map(({ starts_at }) => starts_at);
+  const monday = "2026-11-23T15:07:00Z";
+  assert.deepEqual(await options(monday), []);
+  await asRole("authenticated", users.admin, async (client) => {
+    await client.query("update public.operating_switch set default_capacity=1");
+  });
+  assert.equal((await options(monday))[0], "10:45:00");
+  assert.equal((await options("2026-11-29T17:59:00Z")).at(-1), "13:45:00");
+  assert.deepEqual(await options("2026-11-29T18:00:00Z"), []);
+  await asRole("authenticated", users.alice, async (client) => {
+    await assert.rejects(client.query("select public.configure_pickup_slot('2026-11-23','10:45',1,null)"), code("42501"));
+  });
+  await asRole("authenticated", users.admin, async (client) => {
+    await client.query("select public.configure_pickup_slot('2026-11-23','10:45',1,null)");
+    const { rows } = await owner.query<{ id: string }>("select id from public.pickup_slots where service_date='2026-11-23' and starts_at='10:45'");
+    const order = await submit(owner, users.alice, rows[0].id);
+    assert.equal((await options(monday))[0], "11:00:00");
+    await assert.rejects(client.query("select public.configure_pickup_slot('2026-11-23','10:45',0,null)"), code("23514"));
+    await owner.query("update public.orders set status='cancelled' where id=$1", [order.rows[0].id]);
+    assert.equal((await options(monday))[0], "10:45:00");
+    await client.query("select public.configure_pickup_slot('2026-11-23','10:45',1,'Cierre de prueba')");
+    assert.equal((await options(monday))[0], "11:00:00");
+    await client.query("update public.operating_switch set default_capacity=0");
+  });
+});
+
+test("demo submission is atomic, retries keep the same receipt, and only accepted lines are removed", async () => {
+  const quote = JSON.stringify({
+    currency: "USD", totalMinor: 420,
+    lines: [{ sku: "demo-submit", productName: "Producto de prueba", presentation: "Bolsa", unit: "bolsa",
+      currency: "USD", quantity: 2, unitPriceMinor: 210 }],
+  });
+  const revision = "a".repeat(64);
+  const day = "2026-11-30";
+  const moment = "2026-11-30T15:07:00Z";
+  const order = (client: Client, principal: string, key: string, now: string, data = quote) =>
+    client.query<{ id: string }>("select public.submit_demo_order($1,$2,$3,$4,'10:45',$5,$6) as id",
+      [principal, key, revision, day, data, now]);
+  await owner.query("update public.operating_switch set default_capacity=1");
+  for (const principal of [users.alice, users.bob]) {
+    await owner.query("insert into public.cart_items(user_id,variant_id,quantity) values ($1,'demo-submit',2),($1,'demo-extra',1)", [principal]);
+    await owner.query("insert into public.order_reviews(user_id,revision,snapshot) values($1,$2,$3)", [principal, revision, quote]);
+  }
+  await asRole("authenticated", users.alice, async (client) => {
+    await assert.rejects(order(client, users.alice, randomUUID(), moment), code("42501"));
+  });
+  await assert.rejects(order(owner, users.alice, randomUUID(), "2026-11-30T23:00:00Z"), code("23514"));
+  await assert.rejects(order(owner, users.alice, randomUUID(), moment, quote.replace("420", "400")), code("23514"));
+
+  const clients = [server.getPgClient(), server.getPgClient()];
+  await Promise.all(clients.map((client) => client.connect()));
+  try {
+    const keys = [randomUUID(), randomUUID()];
+    const principals = [users.alice, users.bob];
+    const outcomes = await Promise.allSettled(clients.map((client, index) => order(client, principals[index], keys[index], moment)));
+    const winner = outcomes.findIndex(({ status }) => status === "fulfilled");
+    assert.ok(winner >= 0 && outcomes.filter(({ status }) => status === "fulfilled").length === 1);
+    const again = await order(owner, principals[winner], keys[winner], "2026-11-30T23:00:00Z");
+    const persisted = await owner.query(`
+      select o.id, o.status, o.demo, o.estimated_total_minor, s.reserved
+      from public.orders o join public.pickup_slots s on s.id = o.slot_id where o.id = $1
+    `, [again.rows[0].id]);
+    assert.equal(persisted.rows[0].reserved, 1);
+    assert.equal(persisted.rows[0].status, "pending");
+    assert.equal(persisted.rows[0].demo, true);
+    assert.equal(persisted.rows[0].estimated_total_minor, "420");
+    assert.equal((await owner.query("select 1 from public.order_items where order_id=$1", [again.rows[0].id])).rowCount, 1);
+    assert.equal((await owner.query("select 1 from public.order_events where order_id=$1 and actor_id=$2",
+      [again.rows[0].id, principals[winner]])).rowCount, 1);
+    assert.equal((await owner.query("select 1 from public.cart_items where user_id=$1 and variant_id='demo-submit'", [principals[winner]])).rowCount, 0);
+    assert.equal((await owner.query("select 1 from public.cart_items where user_id=$1 and variant_id='demo-extra'", [principals[winner]])).rowCount, 1);
+    assert.equal((await owner.query("select 1 from public.cart_items where user_id=$1 and variant_id='demo-submit'", [principals[1-winner]])).rowCount, 1);
+    await assert.rejects(order(owner, principals[winner], randomUUID(), moment), code("23505"));
+  } finally {
+    await Promise.all(clients.map((client) => client.end()));
+  }
 });

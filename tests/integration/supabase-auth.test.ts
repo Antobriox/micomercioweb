@@ -47,7 +47,7 @@ test("SPEC-006 registration creates one pending account with Supabase Auth and P
   assert.ok(stack.messages.some((mail) => mail.addresses.includes(email)));
 });
 
-test("SPEC-008 login, authorization, expiry and isolated password recovery work with real local providers", {
+test("SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 and SPEC-020 validate the demo checkout flow", {
   skip: !nativeAuthBinary || !nativeRestBinary, timeout: 90_000,
 }, async (t) => {
   const stack = await startLocalStack(t, { resendSeconds: 0 });
@@ -92,6 +92,22 @@ test("SPEC-008 login, authorization, expiry and isolated password recovery work 
     throw new Error(`Inicio local: ${JSON.stringify(stack.requests.slice(-6))}.`, { cause: error });
   }
   await expect(client.getByText("2 artículos en el carrito.")).toBeVisible();
+  await expect.poll(async () => (
+    await stack.db.query("select quantity from public.cart_items where variant_id = 'demo-arroz-1-kg'")
+  ).rows[0]?.quantity).toBe(2);
+  await client.reload();
+  await expect(client.getByText("2 artículos en el carrito.")).toBeVisible();
+  await client.getByRole("link", { name: "Revisar pedido de prueba" }).click();
+  await expect(client).toHaveURL(/\/pedido\/confirmar$/);
+  await expect(client.getByText("No hay franjas de retiro disponibles hoy.")).toBeVisible();
+  await expect(client.getByText(/Total estimado.*4,20/)).toBeVisible();
+  await stack.db.query("update public.cart_items set quantity = 3 where variant_id = 'demo-arroz-1-kg'");
+  await client.getByRole("button", { name: "Aceptar total estimado" }).click();
+  await expect(client.getByText("Cambió el precio, la cantidad o la disponibilidad.", { exact: false })).toBeVisible();
+  await expect(client.getByText(/Total estimado.*6,30/)).toBeVisible();
+  await client.getByRole("button", { name: "Aceptar total estimado" }).click();
+  await expect(client.getByText("El total estimado actual está revisado.")).toBeVisible();
+  assert.equal((await stack.db.query("select snapshot->>'totalMinor' as total from public.order_reviews")).rows[0].total, "630");
   assert.ok((await client.context().cookies()).some(({ name, httpOnly, sameSite }) =>
     name.startsWith("mi-comercio-session") && httpOnly && sameSite === "Lax"));
   await client.goto(`${stack.nextUrl}/cuenta`);
@@ -101,6 +117,48 @@ test("SPEC-008 login, authorization, expiry and isolated password recovery work 
   await stack.db.query("insert into public.administrators(user_id) values ($1)", [user]);
   await client.goto(`${stack.nextUrl}/admin`);
   await expect(client.getByRole("heading", { name: "Administración" })).toBeVisible();
+  await client.getByRole("link", { name: "Calendario y horarios" }).click();
+  await expect(client.getByRole("heading", { name: "Calendario y horarios" })).toBeVisible();
+  const pause = client.getByRole("form", { name: "Pausa de pedidos" });
+  await pause.getByRole("checkbox").check();
+  await pause.getByLabel("Aviso al cliente").fill("Pausa temporal de demostración.");
+  await pause.getByRole("button", { name: "Guardar" }).click();
+  await expect(pause.getByText("Calendario actualizado.")).toBeVisible();
+  await recovery.goto(`${stack.nextUrl}/horarios`);
+  await expect(recovery.getByText("Pausa temporal de demostración.")).toBeVisible();
+  const capacity = client.getByRole("form", { name: "Capacidad de retiro" });
+  await capacity.getByLabel("Cupos por franja nueva").fill("2");
+  await capacity.getByRole("button", { name: "Guardar" }).click();
+  await expect(capacity.getByText("Calendario actualizado.")).toBeVisible();
+  assert.equal((await stack.db.query("select default_capacity from public.operating_switch")).rows[0].default_capacity, 2);
+  const { local_time: localTime } = (await stack.db.query("select local_time::text from public.operating_at()")).rows[0];
+  if (typeof localTime === "string" && localTime < "23:00:00") {
+    await stack.db.query("update public.operating_switch set paused=false, notice=null, default_capacity=1");
+    await stack.db.query(`insert into public.operating_exceptions(day, closed, notice, store_open, store_close, web_open, web_close)
+      values ((now() at time zone 'America/Guayaquil')::date, false, 'Horario ampliado de prueba', '00:00', '23:59', '00:00', '23:20')`);
+    await client.goto(`${stack.nextUrl}/pedido/confirmar`);
+    const pickup = client.getByRole("combobox", { name: "Franja de retiro de hoy" });
+    await expect(pickup).toBeVisible();
+    await pickup.selectOption({ index: 1 });
+    await client.route("**/api/pedidos/demo", async (route) => {
+      await route.fetch();
+      await route.abort();
+    }, { times: 1 });
+    await client.getByRole("button", { name: "Enviar pedido de prueba" }).click();
+    await expect(client.getByText(/La conexión se interrumpió/)).toBeVisible();
+    await client.getByRole("button", { name: "Enviar pedido de prueba" }).click();
+    await expect(client.getByText("Pedido de prueba registrado.")).toBeVisible();
+    const { rows } = await stack.db.query("select id,status,estimated_total_minor,demo from public.orders");
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].status, "pending");
+    assert.equal(rows[0].estimated_total_minor, "630");
+    assert.equal(rows[0].demo, true);
+    assert.equal((await stack.db.query("select 1 from public.cart_items")).rowCount, 0);
+    await client.reload();
+    await expect(client.getByText("Pedido de prueba registrado.")).toBeVisible();
+  } else {
+    t.diagnostic("La prueba SQL cubre pedidos con horario fijo. La hora local no deja una franja de prueba en esta ejecución.");
+  }
   await stack.db.query("update public.administrators set revoked_at = now() where user_id = $1", [user]);
   assert.equal((await client.goto(`${stack.nextUrl}/admin`))?.status(), 404);
   await stack.db.query("update auth.sessions set not_after = now() - interval '1 minute' where user_id = $1", [user]);
@@ -214,7 +272,7 @@ test("SPEC-007 codes expire, are bound to the recipient, and can be used only on
   assert.ok(stack.requests.some(({ path, status }) => path === "/auth/v1/verify" && status === 429));
 });
 
-test("SPEC-009 contact, verified email change and password changes remain scoped to the customer", {
+test("SPEC-009 and SPEC-010 keep profile and favorites scoped to the customer", {
   skip: !nativeAuthBinary || !nativeRestBinary, timeout: 90_000,
 }, async (t) => {
   const stack = await startLocalStack(t, { resendSeconds: 0 });
@@ -242,6 +300,14 @@ test("SPEC-009 contact, verified email change and password changes remain scoped
   await expect(page.getByRole("heading", { name: "Mi cuenta" })).toBeVisible();
   await expect(page.getByText("0100000009", { exact: true })).toBeVisible();
   await expect(page.locator('input[name="nationalId"]')).toHaveCount(0);
+  await page.goto(`${stack.nextUrl}/producto/arroz-de-prueba`);
+  await page.getByRole("button", { name: "Guardar en favoritos" }).click();
+  await expect(page.getByRole("button", { name: "Quitar de favoritos" })).toBeVisible();
+  await page.goto(`${stack.nextUrl}/cuenta/favoritos`);
+  await expect(page.getByRole("link", { name: "Arroz de prueba" })).toBeVisible();
+  await page.getByRole("button", { name: "Quitar de favoritos" }).click();
+  await expect(page.getByText("Aún no tienes productos guardados.")).toBeVisible();
+  await page.goto(`${stack.nextUrl}/cuenta`);
   await page.locator("#profile-names").fill("Nombre actualizado");
   await page.getByRole("button", { name: "Guardar contacto" }).click();
   await expect(page.getByText("Datos de contacto actualizados.")).toBeVisible();
@@ -271,7 +337,7 @@ test("SPEC-009 contact, verified email change and password changes remain scoped
   }
   await page.goto(`${stack.nextUrl}/cuenta`);
   await expect(page.getByText(newEmail, { exact: true })).toBeVisible();
-  await page.getByText("Cambiar contraseña", { exact: true }).click();
+  await page.locator("summary").filter({ hasText: /^Cambiar contraseña$/ }).click();
   await page.locator("#profile-current-password").fill(password);
   await page.locator("#profile-new-password").fill("otra contraseña ficticia");
   await page.locator("#profile-repeat-password").fill("otra contraseña ficticia");

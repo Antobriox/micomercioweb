@@ -28,9 +28,9 @@ function localUrl(port: number) {
   return `http://${host}:${port}`;
 }
 
-function fixtureToken(secret: string) {
+function fixtureToken(secret: string, role = "anon") {
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
-  const claims = Buffer.from(JSON.stringify({ role: "anon", iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url");
+  const claims = Buffer.from(JSON.stringify({ role, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url");
   const message = `${header}.${claims}`;
   return `${message}.${createHmac("sha256", secret).update(message).digest("base64url")}`;
 }
@@ -237,6 +237,7 @@ export async function startLocalStack(t: TestContext, options?: { otpSeconds?: n
     NEXT_TELEMETRY_DISABLED: "1",
     SUPABASE_URL: supabaseUrl,
     SUPABASE_PUBLISHABLE_KEY: key,
+    SUPABASE_DEMO_WRITER_KEY: fixtureToken(jwtSecret, "service_role"),
     APP_ORIGIN: nextUrl,
   });
   await ready(nextUrl, next.failure);

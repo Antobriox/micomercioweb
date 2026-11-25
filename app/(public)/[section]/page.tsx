@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { CartCount } from "../../../components/storefront/cart-count";
 import { StorePage } from "../../../components/storefront/layout";
 import { Card, Notice, TextLink } from "../../../components/ui/primitives";
+import { categoryName } from "../../../lib/commercial/catalog";
 import { commercial } from "../../../lib/server/commercial";
 
 const informationalPages = {
@@ -17,20 +17,11 @@ const informationalPages = {
 } as const;
 
 const catalogPages = {
-  catalogo: "Catálogo",
   categorias: "Categorías",
-  buscar: "Resultados de búsqueda",
-  promociones: "Promociones",
 } as const;
-
-const categoryLabels: Readonly<Record<string, string>> = {
-  despensa: "Despensa",
-  bebidas: "Bebidas",
-};
 
 type PageProps = {
   params: Promise<{ section: string }>;
-  searchParams: Promise<{ q?: string | string[]; categoria?: string | string[] }>;
 };
 
 function isKey<T extends object>(value: string, map: T): value is Extract<keyof T, string> {
@@ -41,17 +32,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { section } = await params;
   if (isKey(section, informationalPages)) return { title: informationalPages[section].title };
   if (isKey(section, catalogPages)) return { title: catalogPages[section] };
-  return section === "carrito" ? { title: "Carrito" } : {};
+  return {};
 }
 
-export default async function SectionPage({ params, searchParams }: PageProps) {
+export default async function SectionPage({ params }: PageProps) {
   const { section } = await params;
   if (isKey(section, informationalPages)) {
     const { title, text } = informationalPages[section];
-    return <StorePage title={title}><Card><p>{text}</p><TextLink href="/">Volver al inicio</TextLink></Card></StorePage>;
-  }
-  if (section === "carrito") {
-    return <StorePage title="Carrito"><Card><CartCount showLabel={false} /><TextLink href="/catalogo">Explorar el catálogo</TextLink></Card></StorePage>;
+    return <StorePage title={title}><Card><p>{text}</p>
+      {section === "contacto" && <div><TextLink href="/horarios">Consultar horarios</TextLink></div>}
+      <TextLink href="/">Volver al inicio</TextLink></Card></StorePage>;
   }
   if (!isKey(section, catalogPages)) notFound();
 
@@ -60,34 +50,17 @@ export default async function SectionPage({ params, searchParams }: PageProps) {
   if (!("records" in catalog)) {
     return <StorePage title={title}><Notice tone="error">El catálogo no está disponible.</Notice><TextLink href="/">Volver al inicio</TextLink></StorePage>;
   }
-  const { q, categoria } = await searchParams;
-  const term = typeof q === "string" ? q.trim().slice(0, 100) : "";
-  const category = typeof categoria === "string" ? categoria : null;
   const categories = Array.from(new Set(catalog.records.map((product) => product.categoryId)));
-  const matches = catalog.records.filter((product) => {
-    if (section === "promociones" && !product.variants.some((variant) => variant.promotions.length > 0)) return false;
-    if (category && product.categoryId !== category) return false;
-    return !term || `${product.name} ${product.brand}`.toLocaleLowerCase("es").includes(term.toLocaleLowerCase("es"));
-  });
   return (
     <StorePage title={title}>
       <Notice>{catalog.state === "stale" ? "Datos de prueba desactualizados." : "Datos simulados de demostración."}</Notice>
-      {section === "categorias" ? (
+      {categories.length > 0 ? (
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {categories.map((id) => (
-            <li key={id}><Card><TextLink href={{ pathname: "/catalogo", query: { categoria: id } }}>{categoryLabels[id] ?? id}</TextLink></Card></li>
+            <li key={id}><Card><TextLink href={{ pathname: "/catalogo", query: { categoria: id } }}>{categoryName(id)}</TextLink></Card></li>
           ))}
         </ul>
-      ) : (
-        <div className="mt-4">
-          {term && <p className="mb-3">Consulta: {term}</p>}
-          {matches.length > 0 ? (
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {matches.map((product) => <li key={product.id}><Card><h2 className="text-lg font-bold">{product.name}</h2></Card></li>)}
-            </ul>
-          ) : <Card><p>No se encontraron productos para esta selección.</p><TextLink href="/catalogo">Ver todo el catálogo</TextLink></Card>}
-        </div>
-      )}
+      ) : <p className="mt-4">No hay categorías disponibles.</p>}
     </StorePage>
   );
 }

@@ -6,16 +6,19 @@ import { cookies } from "next/headers";
 
 import { sessionCookieName, sessionCookieOptions } from "./auth-cookies";
 
-function isPublishableKey(key: string) {
-  if (key.startsWith("sb_publishable_") && key.length > 20) return true;
+function hasJwtRole(key: string, role: string) {
   const parts = key.split(".");
   if (parts.length !== 3) return false;
   try {
     const claims: unknown = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-    return typeof claims === "object" && claims !== null && "role" in claims && claims.role === "anon";
+    return typeof claims === "object" && claims !== null && "role" in claims && claims.role === role;
   } catch {
     return false;
   }
+}
+
+function isPublishableKey(key: string) {
+  return key.startsWith("sb_publishable_") && key.length > 20 || hasJwtRole(key, "anon");
 }
 
 export function getSupabaseConfig() {
@@ -37,6 +40,15 @@ export function getTransientSupabaseClient() {
   return config ? createClient(config.url, config.key, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   }) : null;
+}
+
+export function getOrderWriter() {
+  const config = getSupabaseConfig();
+  const key = process.env.SUPABASE_DEMO_WRITER_KEY;
+  if (!config || !key || !(key.startsWith("sb_secret_") && key.length > 20 || hasJwtRole(key, "service_role"))) return null;
+  return createClient(config.url, key, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
 }
 
 export async function getSupabaseClient({ writeCookies = false, verifierOnly = false }: {

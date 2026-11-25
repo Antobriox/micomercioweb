@@ -43,6 +43,15 @@ export function createSimulatedAdapter(now = () => new Date()): CommercialAdapte
           maxPerOrder: 3,
           promotions: [],
         },
+        {
+          id: "demo-arroz-caja",
+          presentation: "Caja de 12 bolsas",
+          unit: "caja",
+          price: money(2400),
+          availableQuantity: 3,
+          maxPerOrder: 2,
+          promotions: [],
+        },
       ],
     },
     {

@@ -2,16 +2,28 @@
 
 import { ShoppingBasket } from "lucide-react";
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useSyncExternalStore } from "react";
 
 import { readGuestCart, subscribeToGuestCart } from "../../lib/cart/guest";
+import { accountCartSnapshot, initialAccountCart, subscribeToAccountCart, syncAccountCart } from "../../lib/cart/client-account";
 
 function cartCount() {
   return readGuestCart().reduce((total, line) => total + line.quantity, 0);
 }
 
 export function CartCount({ showLabel = true }: { showLabel?: boolean }) {
-  const count = useSyncExternalStore(subscribeToGuestCart, cartCount, () => 0);
+  const guest = useSyncExternalStore(subscribeToGuestCart, cartCount, () => 0);
+  const account = useSyncExternalStore(subscribeToAccountCart, accountCartSnapshot, initialAccountCart);
+  const path = usePathname();
+  useEffect(() => {
+    if (!showLabel) return;
+    void syncAccountCart();
+    const refresh = () => { void syncAccountCart(); };
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [path, showLabel]);
+  const count = account.mode === "account" ? account.lines.reduce((total, { quantity }) => total + quantity, 0) : guest;
   return showLabel ? (
     <Link href="/carrito" aria-label={`Carrito, ${count} ${count === 1 ? "artículo" : "artículos"}`}
       className="inline-flex min-h-11 items-center gap-2 rounded-xl px-2 font-semibold text-brand sm:px-3">

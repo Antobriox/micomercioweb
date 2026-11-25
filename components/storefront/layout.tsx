@@ -1,10 +1,11 @@
-import { Search, Store, UserRound } from "lucide-react";
+import { Store, UserRound } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { helpNavigation, mainNavigation } from "../../lib/navigation";
 import { CartCount } from "./cart-count";
 import { MobileNavigation } from "./mobile-navigation";
+import { SearchBox } from "./search-box";
 
 export function StoreHeader() {
   return (
@@ -21,14 +22,7 @@ export function StoreHeader() {
               <span className="font-display text-sm leading-tight font-extrabold sm:text-lg lg:text-xl">Comisariato<br className="sm:hidden" /> Mi Comercio</span>
             </Link>
           </div>
-          <form action="/buscar" role="search" aria-label="Catálogo" className="col-span-3 flex items-center gap-1 rounded-xl border border-border bg-white px-2 lg:col-span-1 lg:col-start-2 lg:row-start-1">
-            <label htmlFor="global-search" className="sr-only">Buscar productos</label>
-            <input id="global-search" type="search" name="q" placeholder="Buscar productos" maxLength={100}
-              className="min-h-11 min-w-0 flex-1 rounded-lg bg-transparent px-2" />
-            <button type="submit" aria-label="Buscar" className="grid min-h-11 min-w-11 place-items-center rounded-lg text-brand hover:bg-canvas">
-              <Search size={20} aria-hidden="true" />
-            </button>
-          </form>
+          <SearchBox />
           <div className="col-start-3 row-start-1 flex items-center gap-1">
             <Link href="/acceso" className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-2 font-semibold text-brand">
               <UserRound size={19} aria-hidden="true" /><span className="sr-only md:not-sr-only">Cuenta</span>
@@ -78,10 +72,14 @@ export function Breadcrumbs({ links }: { links: readonly { label: string; href?:
   );
 }
 
-export function StorePage({ title, children }: { title: string; children: ReactNode }) {
+export function StorePage({ title, parents = [], children }: {
+  title: string;
+  parents?: readonly { label: string; href: string }[];
+  children: ReactNode;
+}) {
   return (
     <main className="mx-auto min-h-[55vh] max-w-7xl px-5 py-8 sm:px-8">
-      <Breadcrumbs links={[{ label: title }]} />
+      <Breadcrumbs links={[...parents, { label: title }]} />
       <h1 className="mb-5 text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h1>
       {children}
     </main>
