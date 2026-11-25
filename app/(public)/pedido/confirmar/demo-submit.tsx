@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { demoVisitId, recordFunnelEvent } from "../../../../lib/analytics/demo-funnel";
 import { Button, Notice, TextLink } from "../../../../components/ui/primitives";
 import { syncAccountCart } from "../../../../lib/cart/client-account";
 import { orderStatusLabel } from "../../../../lib/orders/status";
@@ -23,7 +24,7 @@ function readAttempt(): Attempt | null {
 
 async function request(payload: object) {
   const response = await fetch("/api/pedidos/demo", {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, visit: demoVisitId() }),
   });
   const result: { id?: string; status?: string; error?: string } = await response.json();
   return result;
@@ -64,6 +65,7 @@ export function DemoSubmit({ revision, slots, enabled }: {
     attempt.current = current;
     try { sessionStorage.setItem(checkpoint, JSON.stringify(current)); } catch { /* Keep the attempt for this visit. */ }
 
+    recordFunnelEvent("submit");
     writing.current = true;
     setPending(true);
     setMessage("");
@@ -87,7 +89,7 @@ export function DemoSubmit({ revision, slots, enabled }: {
     <p className="font-bold">Pedido de prueba registrado.</p>
     <p>Estado · {orderStatusLabel(receipt.status)}</p>
     <p className="break-all">Identificador · {receipt.id}</p>
-    <TextLink href="/carrito">Ver carrito</TextLink>
+    <TextLink href={`/cuenta/pedidos/${receipt.id}`}>Consultar pedido</TextLink>
   </Notice>;
   if (!revision) return null;
   return (

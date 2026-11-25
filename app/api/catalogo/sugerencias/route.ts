@@ -4,12 +4,12 @@ import { formatMoney } from "../../../../lib/commercial/catalog";
 import { demoEditorial } from "../../../../lib/commercial/demo-editorial";
 import { variantPricing } from "../../../../lib/commercial/pricing";
 import { parseFilters, searchProducts } from "../../../../lib/commercial/search";
-import { commercial } from "../../../../lib/server/commercial";
+import { getStorefrontCatalog } from "../../../../lib/server/commercial/storefront";
 
 export async function GET(request: NextRequest) {
   const { q } = parseFilters({ q: request.nextUrl.searchParams.get("q") ?? undefined });
   if (q.length < 2) return NextResponse.json([]);
-  const catalog = await commercial.getCatalog();
+  const catalog = await getStorefrontCatalog();
   if (!("records" in catalog)) return NextResponse.json([], { status: 503 });
   const { matches } = searchProducts(catalog.records, parseFilters({ q }));
   return NextResponse.json(matches.slice(0, 6).map((product) => ({

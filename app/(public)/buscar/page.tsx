@@ -1,18 +1,20 @@
 import Form from "next/form";
 
+import { FunnelMark } from "../../../components/storefront/funnel-mark";
 import { CatalogGrid } from "../../../components/storefront/catalog-grid";
 import { StorePage } from "../../../components/storefront/layout";
 import { Button, Card, Field, Notice, TextLink } from "../../../components/ui/primitives";
-import { categoryName, paginateCatalog } from "../../../lib/commercial/catalog";
+import { paginateCatalog } from "../../../lib/commercial/catalog";
+import { storefrontCategoryLabel } from "../../../lib/commercial/editorial-category";
 import { parseFilters, searchAvailability, searchProducts, searchReturnUrl, type SearchParameters } from "../../../lib/commercial/search";
-import { commercial } from "../../../lib/server/commercial";
+import { getStorefrontCatalog } from "../../../lib/server/commercial/storefront";
 
 export const metadata = { title: "Resultados de búsqueda" };
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParameters> }) {
   const params = await searchParams;
   const query = parseFilters(params);
-  const catalog = await commercial.getCatalog();
+  const catalog = await getStorefrontCatalog();
   if (!("records" in catalog)) return (
     <StorePage title="Resultados de búsqueda"><Notice tone="error">La búsqueda no está disponible. Intenta más tarde.</Notice></StorePage>
   );
@@ -23,6 +25,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const linkFor = (index: number) => ({ pathname: "/buscar", query: { ...query, pagina: index } });
   return (
     <StorePage title="Resultados de búsqueda">
+      <FunnelMark kind="search" />
+      {records.length === 0 && <FunnelMark kind="search_empty" />}
       <Notice>{catalog.state === "stale" ? "Datos de prueba desactualizados." : "Datos simulados de demostración."}</Notice>
       <Card className="my-5">
         <Form action="/buscar" aria-label="Filtros de productos" className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -30,7 +34,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           <label className="grid gap-1 font-semibold">Categoría
             <select name="categoria" className="ui-field font-normal" defaultValue={query.categoria}>
               <option value="">Todas</option>
-              {categories.map((id) => <option key={id} value={id}>{categoryName(id)}</option>)}
+              {categories.map((id) => <option key={id} value={id}>{storefrontCategoryLabel(catalog.records, id)}</option>)}
             </select>
           </label>
           <label className="grid gap-1 font-semibold">Marca

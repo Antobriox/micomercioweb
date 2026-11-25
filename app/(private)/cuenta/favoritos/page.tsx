@@ -4,7 +4,7 @@ import { FavoriteButton } from "../../../../components/storefront/favorite-butto
 import { StoreFooter, StoreHeader, StorePage } from "../../../../components/storefront/layout";
 import { Card, Notice, TextLink } from "../../../../components/ui/primitives";
 import { requireAccount } from "../../../../lib/server/account";
-import { commercial } from "../../../../lib/server/commercial";
+import { getStorefrontCatalog } from "../../../../lib/server/commercial/storefront";
 
 export const metadata = { title: "Favoritos" };
 
@@ -12,7 +12,7 @@ export default async function FavoritesPage() {
   const account = await requireAccount("/cuenta/favoritos");
   const [{ data, error }, catalog] = await Promise.all([
     account.client.from("favorites").select("product_id").eq("user_id", account.id).order("created_at", { ascending: false }),
-    commercial.getCatalog(),
+    getStorefrontCatalog(),
   ]);
   const records = "records" in catalog ? catalog.records : [];
   return (

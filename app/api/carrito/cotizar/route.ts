@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { purchaseLimit } from "../../../../lib/commercial/catalog";
 import { variantPricing } from "../../../../lib/commercial/pricing";
-import { commercial } from "../../../../lib/server/commercial";
+import { getStorefrontCatalog } from "../../../../lib/server/commercial/storefront";
 
 export async function POST(request: NextRequest) {
   let ids: unknown;
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   if (!Array.isArray(ids) || ids.length > 200 || ids.some((id) => typeof id !== "string" || id.length < 1 || id.length > 100)) {
     return NextResponse.json({ error: "Presentaciones inválidas." }, { status: 400 });
   }
-  const catalog = await commercial.getCatalog();
+  const catalog = await getStorefrontCatalog();
   if (catalog.state !== "available" && catalog.state !== "empty") {
     return NextResponse.json({ error: "Los precios actuales no están disponibles." }, { status: 503 });
   }

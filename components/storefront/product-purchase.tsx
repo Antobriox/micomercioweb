@@ -2,6 +2,8 @@
 
 import { useRef, useState, type FormEvent } from "react";
 
+import { recordFunnelEvent } from "../../lib/analytics/demo-funnel";
+import { FunnelMark } from "./funnel-mark";
 import { addGuestCartLine } from "../../lib/cart/guest";
 import { changeAccountCart } from "../../lib/cart/client-account";
 import { availability, purchaseLimit } from "../../lib/commercial/catalog";
@@ -45,6 +47,7 @@ export function ProductPurchase({ variants, photos, canAdd, signedIn }: {
       const saved = await changeAccountCart("add", variant.id, count, attempt.current.key);
       setPending(false);
       if (saved !== "expired") {
+        if (saved === "saved") recordFunnelEvent("add");
         if (saved !== "error") attempt.current = null;
         setResult({ ok: saved === "saved", message: saved === "saved" ? "Producto agregado al carrito de prueba."
           : saved === "limit" ? `El límite de esta presentación, incluido tu carrito, es ${limit}.`
@@ -53,7 +56,10 @@ export function ProductPurchase({ variants, photos, canAdd, signedIn }: {
       }
     }
     const status = addGuestCartLine(variant.id, count, limit, variantPricing(variant).current);
-    if (status === "added") setResult({ ok: true, message: "Producto agregado al carrito de prueba." });
+    if (status === "added") {
+      recordFunnelEvent("add");
+      setResult({ ok: true, message: "Producto agregado al carrito de prueba." });
+    }
     else {
       setResult({
         ok: false,
@@ -66,6 +72,7 @@ export function ProductPurchase({ variants, photos, canAdd, signedIn }: {
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
+      <FunnelMark kind="product" />
       <div>
         <ProductImage photo={visiblePhotos[photoIndex]} sizes="(min-width: 768px) 45vw, 90vw" />
         {visiblePhotos.length > 1 && <div className="mt-2 flex flex-wrap gap-2">

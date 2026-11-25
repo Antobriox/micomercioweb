@@ -1,5 +1,6 @@
 "use client";
 
+import { recordFunnelEvent } from "../../../../lib/analytics/demo-funnel";
 import { useState } from "react";
 
 import { Notice } from "../../../../components/ui/primitives";
@@ -12,7 +13,10 @@ export function PickupChoice({ slots }: { slots: readonly PickupTime[] | null })
   return (
     <div className="space-y-2">
       <label className="grid gap-1 font-semibold">Franja de retiro de hoy
-        <select name="pickup" className="ui-field font-normal" value={choice} onChange={(event) => setChoice(event.target.value)}>
+        <select name="pickup" className="ui-field font-normal" value={choice} onChange={(event) => {
+          setChoice(event.target.value);
+          if (event.target.value) recordFunnelEvent("slot");
+        }}>
           <option value="">Selecciona una hora</option>
           {slots.map(({ starts_at, remaining, service_date }) => (
             <option key={starts_at} value={`${service_date}T${starts_at.slice(0, 5)}`}>

@@ -5,7 +5,7 @@ import { purchaseLimit } from "../../../../lib/commercial/catalog";
 import { variantPricing } from "../../../../lib/commercial/pricing";
 import { getCurrentAccount } from "../../../../lib/server/account";
 import { getAppOrigin } from "../../../../lib/server/app-origin";
-import { commercial } from "../../../../lib/server/commercial";
+import { getStorefrontCatalog } from "../../../../lib/server/commercial/storefront";
 
 type Account = NonNullable<Awaited<ReturnType<typeof getCurrentAccount>>>;
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     if (quantity === 0) {
       input = [{ sku, quantity, ceiling: 0, minor: null, currency: null }];
     } else {
-      const catalog = await commercial.getCatalog();
+      const catalog = await getStorefrontCatalog();
       if (catalog.state !== "available") return problem(503);
       const variant = catalog.records.flatMap(({ variants }) => variants).find(({ id }) => id === sku);
       const ceiling = variant ? purchaseLimit(variant) : 0;

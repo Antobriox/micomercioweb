@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { buildCartReview } from "../../lib/cart/review";
 import { createCommercialService } from "../../lib/server/commercial/service";
 import { createSimulatedAdapter } from "../../lib/server/commercial/simulated-adapter";
 
@@ -63,4 +64,35 @@ test("restricted reports and real sources are denied before any upstream call", 
   assert.equal(calls, 0);
   assert.equal((await service.getSales("administrator", period)).state, "available");
   assert.equal((await service.getInventory("administrator")).state, "available");
+});
+
+test("SPEC-033 times out and shows the last verified catalog while keeping checkout closed", async () => {
+  const adapter = createSimulatedAdapter(clock);
+  let behavior: "healthy" | "timeout" | "bad" = "healthy";
+  let aborted = false;
+  const service = createCommercialService({
+    ...adapter,
+    async readCatalog(signal) {
+      if (behavior === "timeout") {
+        signal?.addEventListener("abort", () => { aborted = true; }, { once: true });
+        return new Promise(() => {});
+      }
+      const snapshot = await adapter.readCatalog();
+      return behavior === "bad" ? { ...snapshot, records: [snapshot.records[0], snapshot.records[0]] } : snapshot;
+    },
+  }, clock, 15);
+  assert.equal((await service.getCatalog()).state, "available");
+  const cart = [{ variantId: "demo-arroz-1-kg", quantity: 1 }];
+  behavior = "timeout";
+  const stale = await service.getCatalog();
+  assert.equal(stale.state, "stale");
+  assert.ok(aborted);
+  assert.equal(buildCartReview(cart, stale, date).state, "unavailable");
+  assert.equal(cart[0].quantity, 1);
+  behavior = "bad";
+  assert.equal((await service.getCatalog()).state, "stale");
+  behavior = "healthy";
+  const restored = buildCartReview(cart, await service.getCatalog(), date);
+  assert.equal(restored.state, "available");
+  assert.ok(restored.state === "available" && restored.valid);
 });

@@ -1,3 +1,5 @@
+import { CustomerNotificationLink } from "../../../components/storefront/customer-notification-link";
+import { OrderRefresh } from "../../../components/storefront/order-refresh";
 import { StorePage, StoreFooter, StoreHeader } from "../../../components/storefront/layout";
 import { Button, Card, Notice, TextLink } from "../../../components/ui/primitives";
 import { requireAccount } from "../../../lib/server/account";
@@ -47,8 +49,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               </Card>
             </div>
           )}
+          <OrderRefresh />
           <div className="mt-4 flex flex-wrap items-center gap-x-5">
             <TextLink href="/carrito">Ver carrito</TextLink>
+            <TextLink href="/cuenta/pedidos">Mis pedidos</TextLink>
+            <CustomerNotificationLink />
             <TextLink href="/cuenta/favoritos">Favoritos</TextLink>
             <TextLink href="/privacidad">Privacidad</TextLink>
             <form action={logOut}><Button type="submit" tone="secondary">Cerrar sesión</Button></form>

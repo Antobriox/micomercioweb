@@ -3,7 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { buildCartReview, reviewSnapshot } from "../cart/review";
-import { commercial } from "./commercial";
+import { getStorefrontCatalog } from "./commercial/storefront";
 import type { getCurrentAccount } from "./account";
 
 type Account = NonNullable<Awaited<ReturnType<typeof getCurrentAccount>>>;
@@ -12,7 +12,7 @@ export async function getAccountOrderReview(account: Account) {
   const [{ data, error }, catalog] = await Promise.all([
     account.client.from("cart_items").select("variant_id,quantity,quoted_minor,quoted_currency")
       .eq("user_id", account.id).limit(200),
-    commercial.getCatalog(),
+    getStorefrontCatalog(),
   ]);
   if (error || !data) return { state: "unavailable" } as const;
   const review = buildCartReview(data.map((row) => ({

@@ -1,11 +1,14 @@
 import Form from "next/form";
 
+import { EditorialBanners } from "../../../components/storefront/editorial-banners";
+import { activeBanners } from "../../../lib/server/banners";
 import { CatalogGrid } from "../../../components/storefront/catalog-grid";
 import { StorePage } from "../../../components/storefront/layout";
 import { Button, Card, Notice, TextLink } from "../../../components/ui/primitives";
-import { categoryName, purchaseLimit } from "../../../lib/commercial/catalog";
+import { purchaseLimit } from "../../../lib/commercial/catalog";
+import { storefrontCategoryLabel } from "../../../lib/commercial/editorial-category";
 import { variantPricing } from "../../../lib/commercial/pricing";
-import { commercial } from "../../../lib/server/commercial";
+import { getStorefrontCatalog } from "../../../lib/server/commercial/storefront";
 
 export const metadata = { title: "Promociones" };
 
@@ -13,7 +16,7 @@ export default async function PromotionsPage({ searchParams }: {
   searchParams: Promise<{ categoria?: string | string[]; soloDisponibles?: string | string[] }>;
 }) {
   const { categoria, soloDisponibles } = await searchParams;
-  const catalog = await commercial.getCatalog();
+  const [catalog, banners] = await Promise.all([getStorefrontCatalog(), activeBanners("promotions")]);
   if (!("records" in catalog)) return (
     <StorePage title="Promociones"><Notice tone="error">No se pudieron consultar las promociones.</Notice></StorePage>
   );
@@ -32,12 +35,13 @@ export default async function PromotionsPage({ searchParams }: {
           {catalog.state === "stale" ? "Promociones con datos de prueba desactualizados." : "Ofertas de demostración."}
         </p>
       </div>
+      <EditorialBanners rows={banners} products={catalog.records} />
       <Card className="mb-4">
         <Form action="/promociones" aria-label="Filtros de promociones" className="flex flex-wrap items-end gap-4">
           <label className="grid gap-1 font-semibold">Categoría
             <select name="categoria" className="ui-field" defaultValue={typeof categoria === "string" ? categoria : ""}>
               <option value="">Todas</option>
-              {categories.map((id) => <option key={id} value={id}>{categoryName(id)}</option>)}
+              {categories.map((id) => <option key={id} value={id}>{storefrontCategoryLabel(catalog.records, id)}</option>)}
             </select>
           </label>
           <label className="flex min-h-11 items-center gap-2">

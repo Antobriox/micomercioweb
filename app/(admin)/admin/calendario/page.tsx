@@ -1,9 +1,10 @@
 import { StorePage } from "../../../../components/storefront/layout";
 import { Card, Field, Notice } from "../../../../components/ui/primitives";
+import { orderInstant } from "../../../../lib/orders/display";
+import { weekdays } from "../../../../lib/server/operating";
 import { requireAdministrator } from "../../../../lib/server/account";
 import { ScheduleForm } from "./schedule-form";
 
-const weekdays = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const times = [
   ["store_open", "Apertura física"], ["store_close", "Cierre físico"],
   ["web_open", "Apertura web"], ["web_close", "Cierre web"],
@@ -18,10 +19,13 @@ function TimeFields({ prefix, values }: { prefix: string; values?: Record<string
 
 export default async function CalendarPage() {
   const { client } = await requireAdministrator();
-  const [week, exceptions, status] = await Promise.all([
+  const [week, exceptions, status, audit] = await Promise.all([
     client.from("operating_weekdays").select("*").order("day"),
     client.from("operating_exceptions").select("*").order("day").limit(30),
     client.from("operating_switch").select("paused,notice,default_capacity").eq("id", true).single(),
+    client.from("audit_log").select("id,entity,entity_id,action,occurred_at")
+      .in("entity", ["operating_switch","operating_weekdays","operating_exceptions","pickup_slots"])
+      .not("actor_id", "is", null).order("occurred_at", { ascending: false }).limit(20),
   ]);
   return <StorePage title="Calendario y horarios" parents={[{ label: "Administración", href: "/admin" }]}>
     {(week.error || exceptions.error || status.error) && <Notice tone="error">No se pudo cargar el calendario.</Notice>}
@@ -84,6 +88,16 @@ export default async function CalendarPage() {
           <label className="flex min-h-11 items-center gap-2"><input name="closed" type="checkbox" /> Cerrar esta franja</label>
           <Field id="pickup-notice" name="notice" label="Motivo de cierre" maxLength={240} />
         </ScheduleForm>
+      </Card>
+      <Card className="lg:col-span-2">
+        <h2 className="mb-3 text-xl font-bold">Cambios recientes</h2>
+        {audit.error ? <Notice tone="error">No se pudo consultar el registro de cambios.</Notice> :
+          audit.data?.length ? <ul className="space-y-2">{audit.data.map((entry) => <li key={entry.id}>
+            <time dateTime={entry.occurred_at}>{orderInstant(entry.occurred_at)}</time>
+            {" · "}{entry.action === "INSERT" ? "Creación" : entry.action === "DELETE" ? "Eliminación" : "Actualización"}
+            {" · "}{entry.entity === "operating_switch" ? "Configuración general" : entry.entity === "operating_weekdays"
+              ? "Horario semanal" : entry.entity === "operating_exceptions" ? "Fecha especial" : "Franja de retiro"}
+          </li>)}</ul> : <p>No hay cambios de administración registrados.</p>}
       </Card>
     </div>
   </StorePage>;

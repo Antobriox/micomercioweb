@@ -21,8 +21,9 @@ Requiere npm y Node.js 22.13+ o 24+, según la rama de Node.js.
 
 ## Entornos y estructura
 
-- `app/(public)` contiene las páginas públicas. `app/(private)` y `app/(admin)` reservan las rutas de cuenta y administración con acceso cerrado durante la inicialización.
+- `app/(public)` contiene las páginas públicas. `app/(private)` y `app/(admin)` contienen cuenta y administración con acceso autenticado y políticas en la base de datos.
 - `lib/server` contiene configuración exclusiva del servidor. El cliente de Supabase usa la URL y clave publicable de un proyecto aislado de prueba, gestionadas por entorno mediante `.env.local` o la configuración del proveedor. La demostración inicial funciona con ambas variables vacías.
 - Vercel identifica la vista previa y producción técnica mediante `VERCEL_ENV`. Ambas ejecutan el mismo modo de demostración. La configuración de despliegue y los secretos permanecen en el proveedor.
 - [Progreso y evidencia](PROGRESS.md).
 - [Modelo, permisos y pruebas de integración](DOCS/modelo-web.md).
+- [Matriz QA y cierre de demostración](DOCS/verificacion-demo.md).

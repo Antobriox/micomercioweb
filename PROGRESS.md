@@ -1,7 +1,8 @@
 # Progreso de Comisariato Mi Comercio Web
 
-**Actualizado el 24 de noviembre de 2026.**  
-**Avance global** · 55,7 % (15 de 34 especificaciones completas).
+**Actualizado el 25 de noviembre de 2026.**
+
+**Avance global** · 98,9 % (27 de 34 especificaciones completas).
 
 El avance global es la media de los 34 porcentajes. Cada porcentaje refleja grupos de aceptación implementados y comprobados. El 100 % exige completar todos los criterios y las validaciones aplicables.
 
@@ -24,31 +25,31 @@ SPEC-010 requiere variantes de SPEC-012 y también consume el historial y carrit
 | [SPEC-007](SPECS/SPEC-007.md) | Verificación de correo con código | SPEC-006 | COMPLETADA | 100 % |
 | [SPEC-008](SPECS/SPEC-008.md) | Login, sesiones y recuperación | SPEC-005, SPEC-007 | COMPLETADA | 100 % |
 | [SPEC-009](SPECS/SPEC-009.md) | Mi perfil y seguridad de cuenta | SPEC-008, SPEC-005 | COMPLETADA | 100 % |
-| [SPEC-010](SPECS/SPEC-010.md) | Favoritos y repetición de compras | SPEC-008, SPEC-012 | BLOQUEADA | 50 % |
+| [SPEC-010](SPECS/SPEC-010.md) | Favoritos y repetición de compras | SPEC-008, SPEC-012 | COMPLETADA | 100 % |
 | [SPEC-011](SPECS/SPEC-011.md) | Catálogo, categorías y fichas | SPEC-002, SPEC-003, SPEC-004 | COMPLETADA | 100 % |
 | [SPEC-012](SPECS/SPEC-012.md) | Variantes y presentaciones | SPEC-002, SPEC-011 | COMPLETADA | 100 % |
 | [SPEC-013](SPECS/SPEC-013.md) | Búsqueda, filtros y ordenamiento | SPEC-004, SPEC-011 | COMPLETADA | 100 % |
 | [SPEC-014](SPECS/SPEC-014.md) | Promociones y precios de oferta | SPEC-002, SPEC-011 | COMPLETADA | 100 % |
 | [SPEC-015](SPECS/SPEC-015.md) | Recomendaciones en ficha de producto | SPEC-011, SPEC-012 | COMPLETADA | 100 % |
-| [SPEC-016](SPECS/SPEC-016.md) | Carrito persistente de visitante y cliente | SPEC-005, SPEC-011, SPEC-012 | EN VALIDACIÓN | 90 % |
-| [SPEC-017](SPECS/SPEC-017.md) | Resumen final y revisión de precios | SPEC-016, SPEC-008, SPEC-002 | EN VALIDACIÓN | 90 % |
+| [SPEC-016](SPECS/SPEC-016.md) | Carrito persistente de visitante y cliente | SPEC-005, SPEC-011, SPEC-012 | COMPLETADA | 100 % |
+| [SPEC-017](SPECS/SPEC-017.md) | Resumen final y revisión de precios | SPEC-016, SPEC-008, SPEC-002 | COMPLETADA | 100 % |
 | [SPEC-018](SPECS/SPEC-018.md) | Horarios y calendario operativo | SPEC-005 | COMPLETADA | 100 % |
 | [SPEC-019](SPECS/SPEC-019.md) | Franjas de retiro y cupos | SPEC-018, SPEC-005 | COMPLETADA | 100 % |
-| [SPEC-020](SPECS/SPEC-020.md) | Creación de pedidos e idempotencia | SPEC-005, SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 | EN VALIDACIÓN | 75 % |
-| [SPEC-021](SPECS/SPEC-021.md) | Seguimiento e historial de pedidos | SPEC-008, SPEC-020 | PENDIENTE | 0 % |
-| [SPEC-022](SPECS/SPEC-022.md) | Cancelaciones de cliente y administrador | SPEC-020, SPEC-021 | PENDIENTE | 0 % |
-| [SPEC-023](SPECS/SPEC-023.md) | Máquina de estados y coordinación manual | SPEC-020, SPEC-022 | PENDIENTE | 0 % |
-| [SPEC-024](SPECS/SPEC-024.md) | Notificaciones internas del cliente | SPEC-005, SPEC-021, SPEC-023 | PENDIENTE | 0 % |
-| [SPEC-025](SPECS/SPEC-025.md) | Dashboard inicial y alertas de nuevos pedidos | SPEC-005, SPEC-020, SPEC-023 | PENDIENTE | 0 % |
-| [SPEC-026](SPECS/SPEC-026.md) | Administración de pedidos y clientes | SPEC-005, SPEC-020, SPEC-022, SPEC-023 | PENDIENTE | 0 % |
-| [SPEC-027](SPECS/SPEC-027.md) | Catálogo editorial e imágenes | SPEC-005, SPEC-011 | PENDIENTE | 0 % |
-| [SPEC-028](SPECS/SPEC-028.md) | Banners y campañas visuales CMS | SPEC-005, SPEC-003, SPEC-027 | PENDIENTE | 0 % |
-| [SPEC-029](SPECS/SPEC-029.md) | CMS de páginas, FAQs y SEO editable | SPEC-004, SPEC-005, SPEC-003 | PENDIENTE | 0 % |
-| [SPEC-030](SPECS/SPEC-030.md) | Configuración administrativa y excepciones | SPEC-018, SPEC-019, SPEC-025 | PENDIENTE | 0 % |
-| [SPEC-031](SPECS/SPEC-031.md) | Analítica de pedidos y ventas Picking | SPEC-002, SPEC-025 | PENDIENTE | 0 % |
-| [SPEC-032](SPECS/SPEC-032.md) | Analítica de inventario Picking | SPEC-002, SPEC-025 | PENDIENTE | 0 % |
-| [SPEC-033](SPECS/SPEC-033.md) | Adaptador Picking, disponibilidad y modo seguro | SPEC-002, SPEC-011, SPEC-014, SPEC-017, SPEC-031, SPEC-032 | PENDIENTE | 0 % |
-| [SPEC-034](SPECS/SPEC-034.md) | Seguridad, accesibilidad, SEO, QA y preparación de entrega | SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-013, SPEC-020, SPEC-023, SPEC-024, SPEC-025, SPEC-026, SPEC-027, SPEC-028, SPEC-029, SPEC-030, SPEC-033 | PENDIENTE | 0 % |
+| [SPEC-020](SPECS/SPEC-020.md) | Creación de pedidos e idempotencia | SPEC-005, SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 | COMPLETADA | 100 % |
+| [SPEC-021](SPECS/SPEC-021.md) | Seguimiento e historial de pedidos | SPEC-008, SPEC-020 | COMPLETADA | 100 % |
+| [SPEC-022](SPECS/SPEC-022.md) | Cancelaciones de cliente y administrador | SPEC-020, SPEC-021 | COMPLETADA | 100 % |
+| [SPEC-023](SPECS/SPEC-023.md) | Máquina de estados y coordinación manual | SPEC-020, SPEC-022 | COMPLETADA | 100 % |
+| [SPEC-024](SPECS/SPEC-024.md) | Notificaciones internas del cliente | SPEC-005, SPEC-021, SPEC-023 | EN VALIDACIÓN | 95 % |
+| [SPEC-025](SPECS/SPEC-025.md) | Dashboard inicial y alertas de nuevos pedidos | SPEC-005, SPEC-020, SPEC-023 | COMPLETADA | 100 % |
+| [SPEC-026](SPECS/SPEC-026.md) | Administración de pedidos y clientes | SPEC-005, SPEC-020, SPEC-022, SPEC-023 | COMPLETADA | 100 % |
+| [SPEC-027](SPECS/SPEC-027.md) | Catálogo editorial e imágenes | SPEC-005, SPEC-011 | EN VALIDACIÓN | 95 % |
+| [SPEC-028](SPECS/SPEC-028.md) | Banners y campañas visuales CMS | SPEC-005, SPEC-003, SPEC-027 | EN VALIDACIÓN | 95 % |
+| [SPEC-029](SPECS/SPEC-029.md) | CMS de páginas, FAQs y SEO editable | SPEC-004, SPEC-005, SPEC-003 | EN VALIDACIÓN | 97 % |
+| [SPEC-030](SPECS/SPEC-030.md) | Configuración administrativa y excepciones | SPEC-018, SPEC-019, SPEC-025 | COMPLETADA | 100 % |
+| [SPEC-031](SPECS/SPEC-031.md) | Analítica de pedidos y ventas Picking | SPEC-002, SPEC-025 | COMPLETADA | 100 % |
+| [SPEC-032](SPECS/SPEC-032.md) | Analítica de inventario Picking | SPEC-002, SPEC-025 | COMPLETADA | 100 % |
+| [SPEC-033](SPECS/SPEC-033.md) | Adaptador Picking, disponibilidad y modo seguro | SPEC-002, SPEC-011, SPEC-014, SPEC-017, SPEC-031, SPEC-032 | EN VALIDACIÓN | 97 % |
+| [SPEC-034](SPECS/SPEC-034.md) | Seguridad, accesibilidad, SEO, QA y preparación de entrega | SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-013, SPEC-020, SPEC-023, SPEC-024, SPEC-025, SPEC-026, SPEC-027, SPEC-028, SPEC-029, SPEC-030, SPEC-033 | EN VALIDACIÓN | 93 % |
 
 ## Registro de implementación y verificación
 
@@ -262,3 +263,74 @@ SPEC-010 requiere variantes de SPEC-012 y también consume el historial y carrit
 
 - Implementación. Botón de envío solo para demostración, reintentos con el mismo UUID, consulta de recibo, validación final de sesión, precio, horario y franja, persistencia de cabecera/líneas/evento y limpieza selectiva.
 - Archivos. API de pedidos, formulario y recibo, credencial opcional de servidor, migración transaccional y pruebas.
+
+- Verificado. Pasaron lint, tipos, build, 18 unitarias, 11 pruebas de PostgreSQL y 21 pruebas Playwright. La integración en navegador registró un solo pedido, interrumpió la respuesta, recuperó el mismo recibo, verificó el total y confirmó la persistencia en estado Pendiente.
+- Se completan SPEC-016 y SPEC-017. PostgreSQL conservó las líneas ajenas al envío y guardó la instantánea aprobada. Ante cupo perdido, horario cerrado o revisión inválida, la transacción conservó el carrito. Se corrigió una espera en la regresión de recuperación de contraseña.
+
+### SPEC-021 · Inicio
+
+- Aceptación. La cuenta muestra su pedido activo e historial. El detalle incluye franja, importes guardados y línea de tiempo. Las URL ajenas deben quedar denegadas y los estados activos se actualizan sin recarga obligatoria.
+
+- Implementación. Vistas de pedido activo, historial paginado, detalle con instantánea y franja histórica, actualización al recuperar foco y cada 15 segundos. El recibo enlaza al detalle.
+- SPEC-010 se retoma. La repetición reconstruye el carrito con el catálogo vigente, avisa sobre líneas no disponibles y conserva las líneas existentes. PostgreSQL comprueba propiedad, estado terminal y ausencia de pedido activo.
+- Archivos. Rutas de cuenta y pedidos, componentes de seguimiento, migraciones de historial y repetición, regresiones unitarias e integración.
+
+SPEC-010 y SPEC-021. La prueba nativa de navegador confirmó propiedad del historial, actualización de estado, productos vigentes y repetición sin crear pedidos ni eliminar líneas del carrito.
+
+SPEC-022. Cancelación con comparación de estado, auditoría, motivos administrativos protegidos y liberación a través del disparador de cupos. Formularios de cliente y administrador. Pendiente ejecutar validaciones.
+
+SPEC-022. Compilación de producción, ESLint, TypeScript y 12 pruebas de PostgreSQL correctas. Navegador nativo confirmó apertura por teclado, cancelación efectiva, cupo liberado y repetición posterior; PostgreSQL comprobó doble cancelación, conflicto de estado, acceso ajeno, privacidad del motivo y protección de Entregado.
+
+SPEC-023. Acción administrativa secuencial con bloqueo por fila y auditoría, lista de preparación, coordinación verbal y doble confirmación explícita de cobro y retiro simulados. Pendiente verificación de base de datos y navegador.
+
+SPEC-023. ESLint, TypeScript, compilación, 19 pruebas unitarias y 13 de PostgreSQL correctas. Navegador nativo recorrió los cuatro avances, rechazó la entrega sin confirmación y mostró el evento auditado de entrega de prueba. PostgreSQL cubrió dos pestañas, saltos, cancelación por faltante y control de rol.
+
+SPEC-024. Cada evento de pedido genera un aviso interno para el propietario. Campana, listado, marcador de lectura y actualización al reconectar. Pendientes prueba del navegador y prueba interactiva con lector de pantalla.
+
+SPEC-024. ESLint, TypeScript, compilación, 19 unitarias y 14 de PostgreSQL correctas. Navegador comprobó contador, propiedad, lectura y reconexión. PostgreSQL comprobó avisos únicos y lectura idempotente. Falta sesión interactiva con lector de pantalla. Se amplió la comprobación de SMTP a todo el flujo administrativo para la próxima regresión.
+
+SPEC-025. Dashboard administrativo con contadores del día local, cola, franjas ocupadas, aviso de entorno y sonido explícitamente activable. Los enlaces comparten filtros de fecha/estado con la cola. Ventas e inventario reales pendientes de Picking.
+
+SPEC-025. Compilación, ESLint, TypeScript, 19 unitarias y 14 pruebas PostgreSQL correctas. Navegador confirmó cola única, sonido activado con interacción, aviso visual y coherencia entre contador y filtro de fecha en Guayaquil. Quedan los accesos a analítica e inventario, sujetos a SPECS 031 y 032.
+
+SPEC-026. Búsquedas autorizadas por formulario POST para evitar cédulas o correos en URL, filtros de pedido, vista con cédula enmascarada, historial y suspensión/reactivación con comparación de versión, auditoría y revocación de sesiones. Pendientes pruebas en PostgreSQL y navegador.
+
+SPEC-026. Compilación, ESLint, TypeScript, 19 pruebas unitarias y 15 de PostgreSQL correctas. Navegador verificó búsqueda sin exponer la cédula en URL, dato enmascarado, suspensión, reactivación y rechazo de la sesión anterior. PostgreSQL comprobó auditoría, acceso ajeno y conflicto de edición.
+
+SPEC-027. Fichas, categorías, destacados, visibilidad y galerías editoriales. Sharp valida el contenido y convierte imágenes, y las políticas de Storage restringen lectura a medios publicados. La validación de archivos se ejecuta por elemento. Pendientes regresión y transferencia real con Supabase Storage.
+
+SPEC-027. ESLint, TypeScript, compilación y 16 pruebas PostgreSQL correctas. El navegador comprobó cambios públicos, destacados, ocultación de URL y rechazo de archivos por elemento. RLS de medios pasó en PostgreSQL con el esquema de prueba. Falta probar subida, descarga y reemplazo contra la API real de Supabase Storage, ausente del entorno nativo.
+
+SPEC-028. Editor y vista previa de banners con dos resoluciones, ubicación, vigencia y orden. Publicación y lectura de imágenes limitadas por horario. Enlace a producto/categoría validado también al mostrar. Pruebas pendientes.
+
+SPEC-028. Compilación, lint, tipos, 19 unitarias y 17 pruebas PostgreSQL correctas. Navegador verificó selección móvil, vista previa, destino retirado sin enlace y desactivación. PostgreSQL cubrió solapamiento, ventanas, orden, sección y control de acceso. Storage real sigue pendiente.
+
+SPEC-029. CMS con borrador privado, vista previa, publicación optimista, SEO, bloques FAQ/historia, contacto y galería. La publicación legal exige registrar revisión. Los marcadores se conservan mientras falte información confirmada.
+
+SPEC-029. Compilación, lint, tipos, 19 unitarias, 18 pruebas PostgreSQL y navegador correctos. Se verificó preview privada, publicación pública, SEO, texto literal, versiones concurrentes y requisito legal. La entrega de imágenes de galería queda pendiente junto con Storage; historia, contacto y textos oficiales siguen en espera.
+
+SPEC-030. Se reutilizó el editor operativo existente. El horario semanal público se consulta desde la configuración y el administrador ve auditoría reciente. Pendiente confirmar el cambio de horario en navegador y repetir el checkout.
+
+SPEC-030. Compilación, lint, tipos, unitarias y 18 pruebas PostgreSQL correctas. Navegador verificó el aviso de pausa, el registro de cambios, el horario semanal publicado tras editarlo y el recorrido completo de checkout. Se conserva la protección de reservas existentes.
+
+SPEC-031. Analítica separada de pedidos web y ventas de caja simuladas. Períodos Guayaquil, devolución, netos y comparación; el panel distingue datos faltantes y conversión sin medición. Pendientes regresión y fuentes reales.
+
+SPEC-031. La primera regresión de navegador y PostgreSQL confirmó períodos, permisos y separación de pedidos/ventas. Se añadió conversión de envío con intentos válidos deduplicados, tasa de cancelación y tiempos de preparación; falta regresión del agregado.
+
+SPEC-031. 21 unitarias y 20 pruebas PostgreSQL correctas, incluida conversión con un único intento por clave, cohorte y acceso restringido. Se usa venta neta por transacción válida para ticket promedio. Permanecen pendientes los eventos de embudo anteriores al envío y los datos comerciales reales.
+
+SPEC-032. Inventario simulado por variante con datos desconocidos, agotados, umbral de stock bajo elegido en el filtro, duplicados, disponibilidad publicada y valoración condicionada a costos. Se distingue falta de historial para rotación. Pendiente validación en navegador.
+
+SPEC-032. Compilación, lint, tipos, 22 unitarias y 20 pruebas PostgreSQL correctas. Navegador comprobó stock cero, desconocido, filtro bajo con umbral, valoración sin costos y rechazo público. La rotación muestra indisponibilidad por ausencia de historial en la fuente simulada.
+
+SPEC-033. Adaptador con plazo y cancelación, detección de identificadores repetidos, último catálogo verificado marcado como desactualizado durante fallos y dashboard de estado. Sin protocolo externo ni apertura comercial. Pendiente validar la recuperación simulada.
+
+SPEC-033. Compilación, lint, tipos y 23 unitarias correctas. Se verificaron timeout, cancelación de lectura, copia marcada como desactualizada, bloqueo del envío con carrito conservado y recuperación. Picking real espera autorización técnica y fuente verificable.
+
+SPEC-034. Matriz QA01–QA32, plan de cierre de piloto, cabeceras web, no indexación, pruebas de reflujo y restauración PostgreSQL local. npm audit de producción informó cero vulnerabilidades conocidas. Falta ejecutar la regresión final y completar verificaciones con servicios y dispositivos externos.
+
+SPEC-031. Se añadieron pasos de visita, carrito, acceso y envío y señales de búsqueda, franja y rechazo. La demostración registra categorías y un identificador aleatorio de pestaña sin correo, cédula, texto de búsqueda ni identificador de cuenta. El agregado deduplica por pestaña y categoría. Pendiente verificación del recorrido.
+
+Regresión de SPEC-025 y SPEC-031. El panel enlaza analítica e inventario. El navegador comprobó alerta visual con audio permitido y con reproducción rechazada. Se comprobó el embudo completo desde ficha hasta envío, deduplicación del intento y recuperación del recibo. PostgreSQL restauró un clúster aislado sin perder pedidos, cupos, eventos ni permisos. Las pruebas móviles usaron perfiles emulados de Android e iOS en Edge. La API oficial de Storage requiere un entorno compatible: su instalación en esta máquina falló porque fs-xattr excluye Windows.
+
+Regresión final del 25 de noviembre de 2026. Compilación de Next.js, ESLint, TypeScript, 23 pruebas unitarias, 22 de PostgreSQL, 23 de Playwright en Edge y 5 de integración con Auth, PostgREST, SMTP local y navegador, todas correctas. Git diff --check sin errores. La matriz QA01–QA32 está en DOCS/verificacion-demo.md. Los cierres pendientes requieren lector interactivo, Android/iOS físicos, un entorno compatible con Storage y el piloto autorizado con dominio, datos oficiales e integración Picking.

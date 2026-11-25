@@ -17,7 +17,7 @@ export function CatalogGrid({ products, simulated, returnUrl, headingLevel = 2 }
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {products.map((product) => {
         const first = product.variants[0];
-        const photo = simulated ? demoEditorial(product.id)?.photos[0] : undefined;
+        const photo = product.editorial?.photos[0] ?? (simulated ? demoEditorial(product.id)?.photos[0] : undefined);
         return (
           <li key={product.id}>
             <article className="h-full rounded-2xl bg-white p-4 shadow-sm">

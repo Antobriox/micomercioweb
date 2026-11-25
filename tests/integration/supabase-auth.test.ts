@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 
 import { chromium, expect, type Page } from "@playwright/test";
 
-import { guestCartKey } from "../../lib/cart/guest";
 import { nativeAuthBinary, nativeRestBinary, startLocalStack } from "../support/local-stack";
 
 async function fillRegistration(page: Page, email: string, nationalId: string) {
@@ -16,6 +16,273 @@ async function fillRegistration(page: Page, email: string, nationalId: string) {
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Crear cuenta de prueba" }).click();
 }
+
+test("SPEC-010, SPEC-021 to SPEC-029 and SPEC-031 to SPEC-034 cover simulated administration", {
+  skip: !nativeAuthBinary || !nativeRestBinary, timeout: 120_000,
+}, async (t) => {
+  const stack = await startLocalStack(t);
+  const browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  const person = async (email: string, nationalId: string) => {
+    await page.goto(`${stack.nextUrl}/registro`);
+    await fillRegistration(page, email, nationalId);
+    await expect(page.getByRole("heading", { name: "Registro pendiente de verificación" })).toBeVisible();
+    return (await stack.db.query<{ id: string }>(
+      "update auth.users set email_confirmed_at=now() where email=$1 returning id", [email],
+    )).rows[0].id;
+  };
+  const email = "cliente-pedidos@example.test";
+  const customer = await person(email, "0100000009");
+  const other = await person("otra-cuenta@example.test", "0200000008");
+  const sentMail = stack.messages.length;
+  await page.goto(`${stack.nextUrl}/acceso`);
+  await page.locator("#login-email").fill(email);
+  await page.locator("#login-password").fill("una contraseña ficticia");
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
+  await expect(page.getByRole("heading", { name: "Mi cuenta" })).toBeVisible();
+  await page.getByRole("link", { name: "Mis pedidos" }).click();
+  await expect(page.getByText("No tienes un pedido activo.")).toBeVisible();
+  await expect(page.getByText(/No hay pedidos en esta página/)).toBeVisible();
+
+  const slot = (await stack.db.query<{ id: string }>(
+    "insert into public.pickup_slots(service_date,starts_at,capacity) values(current_date-2,'10:45',3) returning id",
+  )).rows[0].id;
+  const seed = async (user: string) => (await stack.db.query<{ id: string }>(
+    "insert into public.orders(user_id,slot_id,request_key,estimated_total_minor,currency) values($1,$2,$3,900,'USD') returning id",
+    [user, slot, randomUUID()],
+  )).rows[0].id;
+  const previous = await seed(customer);
+  await stack.db.query("update public.orders set status='cancelled' where id=$1", [previous]);
+  const active = await seed(customer);
+  const foreign = await seed(other);
+  await stack.db.query("insert into public.order_events(order_id,actor_id,next_status) values($1,$2,'pending')", [active, customer]);
+  await stack.db.query(`insert into public.order_items(order_id,variant_id,product_name,presentation,unit,quantity,unit_price_minor)
+    values($1,'demo-arroz-1-kg','Arroz histórico','Bolsa','bolsa',2,400),($1,'demo-retirado','Línea retirada','Caja','caja',1,100)`, [previous]);
+  await stack.db.query("insert into public.cart_items(user_id,variant_id,quantity) values($1,'demo-arroz-caja',1)", [customer]);
+  await page.goto(`${stack.nextUrl}/cuenta/pedidos`);
+  await expect(page.getByRole("region", { name: "Pedido activo" }).getByText("Pendiente")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Historial" }).getByText("Cancelado")).toBeVisible();
+  const otherResponse = await page.goto(`${stack.nextUrl}/cuenta/pedidos/${foreign}`);
+  assert.equal(otherResponse?.status(), 404);
+  await page.goto(`${stack.nextUrl}/cuenta/pedidos/${active}`);
+  await expect(page.getByText("Estado · Pendiente")).toBeVisible();
+  await stack.db.query("update public.orders set status='confirmed' where id=$1", [active]);
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(page.getByText("Estado · Confirmado")).toBeVisible();
+  await page.goto(`${stack.nextUrl}/cuenta/pedidos/${previous}`);
+  await expect(page.getByText("Retiro ·", { exact: false })).toContainText("10:45");
+  await page.getByRole("button", { name: "Repetir en el carrito" }).click();
+  await expect(page.getByText(/Ya tienes un pedido activo/)).toBeVisible();
+  await page.goto(`${stack.nextUrl}/cuenta/pedidos/${active}`);
+  await page.locator("summary").filter({ hasText: "Cancelar pedido" }).focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Confirmar cancelación" }).click();
+  await expect(page.getByText("Estado · Cancelado")).toBeVisible();
+  assert.equal((await stack.db.query("select reserved from public.pickup_slots where id=$1", [slot])).rows[0].reserved, 1);
+  await page.goto(`${stack.nextUrl}/cuenta/pedidos/${previous}`);
+  await page.getByRole("button", { name: "Repetir en el carrito" }).click();
+  await expect(page.getByText(/cantidades anteriores de Línea retirada/)).toBeVisible();
+  await page.getByRole("link", { name: "Revisar carrito" }).click();
+  await expect(page.getByText("3 artículos en el carrito.")).toBeVisible();
+  const rows = await stack.db.query("select variant_id,quantity,quoted_minor from public.cart_items where user_id=$1 order by variant_id", [customer]);
+  assert.deepEqual(rows.rows, [
+    { variant_id: "demo-arroz-1-kg", quantity: 2, quoted_minor: "210" },
+    { variant_id: "demo-arroz-caja", quantity: 1, quoted_minor: null },
+  ]);
+  assert.equal((await stack.db.query("select 1 from public.orders where user_id=$1", [customer])).rowCount, 2);
+  await page.goto(`${stack.nextUrl}/admin/pedidos/${foreign}`);
+  await expect(page.getByRole("button", { name: "Confirmar pedido" })).toHaveCount(0);
+  await stack.db.query("insert into public.administrators(user_id) values ($1)", [other]);
+  const admin = await browser.newPage();
+  await admin.goto(`${stack.nextUrl}/acceso?destino=/admin`);
+  await admin.locator("#login-email").fill("otra-cuenta@example.test");
+  await admin.locator("#login-password").fill("una contraseña ficticia");
+  await admin.getByRole("button", { name: "Iniciar sesión" }).click();
+  await expect(admin.locator("#login-email")).toHaveCount(0);
+  await admin.goto(`${stack.nextUrl}/admin/pedidos/${foreign}`);
+  for (const [button, state] of [
+    ["Confirmar pedido", "Confirmado"],
+    ["Iniciar preparación", "En preparación"],
+    ["Marcar listo para retirar", "Listo para retirar"],
+  ]) {
+    await admin.getByRole("button", { name: button }).click();
+    await expect(admin.getByText(`Estado · ${state}`, { exact: true })).toBeVisible();
+  }
+  await admin.getByRole("button", { name: "Registrar entrega de prueba" }).click();
+  await expect(admin.getByText("Estado · Listo para retirar", { exact: true })).toBeVisible();
+  await admin.getByLabel("Verifiqué el cobro de prueba en caja").check();
+  await admin.getByLabel("Verifiqué el retiro de prueba").check();
+  await admin.getByRole("button", { name: "Registrar entrega de prueba" }).click();
+  await expect(admin.getByText("Estado · Entregado", { exact: true })).toBeVisible();
+  await expect(admin.getByText("Cobro y retiro simulados verificados manualmente")).toBeVisible();
+
+  await page.goto(`${stack.nextUrl}/cuenta`);
+  await page.getByRole("link", { name: /Notificaciones/ }).click();
+  await expect(page.getByRole("heading", { name: "Notificaciones" })).toBeVisible();
+  await expect(page.getByText("2 sin leer", { exact: true })).toBeVisible();
+  await expect(page.getByText("Entregado · Sin leer")).toHaveCount(0);
+  const cancelled = page.getByRole("listitem").filter({ hasText: "Cancelado · Sin leer" });
+  await cancelled.getByRole("button", { name: "Marcar como leída" }).click();
+  await expect(page.getByText("Cancelado · Leída")).toBeVisible();
+  await expect(page.getByText("1 sin leer", { exact: true })).toBeVisible();
+  await page.context().setOffline(true);
+  const next = await seed(customer);
+  await stack.db.query("insert into public.order_events(order_id,actor_id,next_status) values($1,$2,'pending')", [next, customer]);
+  await page.context().setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await expect(page.getByText("2 sin leer", { exact: true })).toBeVisible();
+  assert.equal(stack.messages.length, sentMail);
+
+  await admin.addInitScript(() => {
+    const oscillator = AudioContext.prototype.createOscillator;
+    AudioContext.prototype.createOscillator = function () {
+      const html = document.documentElement;
+      html.dataset.tones = String(Number(html.dataset.tones ?? "0") + 1);
+      return oscillator.call(this);
+    };
+  });
+  await admin.goto(`${stack.nextUrl}/admin`);
+  await expect(admin.getByText("1 pendiente de confirmación", { exact: true })).toBeVisible();
+  await expect(admin.getByRole("link", { name: "Pendiente · 0", exact: true })).toBeVisible();
+  const sound = admin.getByRole("button", { name: "Sonido de pedidos nuevos" });
+  await sound.click();
+  await expect(sound).toHaveAttribute("aria-pressed", "true");
+  const today = (await stack.db.query<{ id: string }>(
+    "insert into public.pickup_slots(service_date,starts_at,capacity) values((now() at time zone 'America/Guayaquil')::date,'23:45',1) returning id",
+  )).rows[0].id;
+  const todayOrder = (await stack.db.query<{ id: string }>(
+    "insert into public.orders(user_id,slot_id,request_key,estimated_total_minor,currency) values($1,$2,$3,900,'USD') returning id",
+    [other, today, randomUUID()],
+  )).rows[0].id;
+  await admin.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(admin.getByText("2 pendientes de confirmación", { exact: true })).toBeVisible();
+  await expect(admin.locator("html")).toHaveAttribute("data-tones", "1");
+  await admin.evaluate(() => window.dispatchEvent(new Event("online")));
+  await expect(admin.getByRole("link", { name: `Pedido ${todayOrder.slice(0, 8).toUpperCase()}`, exact: true })).toHaveCount(1);
+  const restrictedAudio = await browser.newContext({ storageState: await admin.context().storageState() });
+  try {
+    const silent = await restrictedAudio.newPage();
+    await silent.goto(`${stack.nextUrl}/admin`);
+    await silent.evaluate(() => {
+      AudioContext.prototype.resume = () => Promise.reject(new DOMException("Audio unavailable in this fixture", "NotAllowedError"));
+    });
+    await silent.getByRole("button", { name: "Sonido de pedidos nuevos" }).click();
+    await expect(silent.getByText("El navegador no habilitó el sonido.")).toBeVisible();
+    await expect(silent.getByText("2 pendientes de confirmación", { exact: true })).toBeVisible();
+  } finally { await restrictedAudio.close(); }
+  await admin.getByRole("link", { name: "Pendiente · 1", exact: true }).click();
+  await expect(admin.getByRole("link", { name: /Ver pedido/ })).toHaveCount(1);
+  await expect(admin.getByRole("link", { name: `Ver pedido ${todayOrder.slice(0, 8).toUpperCase()}` })).toBeVisible();
+  await admin.getByLabel("Pedido, cliente, cédula o correo").fill("cuenta-ausente@example.test");
+  await admin.getByRole("button", { name: "Buscar", exact: true }).click();
+  await expect(admin.getByText("Sin pedidos para esta búsqueda.")).toBeVisible();
+  await admin.goto(`${stack.nextUrl}/admin/clientes`);
+  await admin.getByLabel("Nombre, cédula o correo").fill("0100000009");
+  await admin.getByRole("button", { name: "Buscar", exact: true }).click();
+  const result = admin.getByRole("region", { name: "Resultados de clientes" });
+  const customerLink = result.locator(`a[href="/admin/clientes/${customer}"]`);
+  await expect(result.getByRole("link")).toHaveCount(1);
+  assert.ok(!admin.url().includes("0100000009"));
+  await customerLink.click();
+  await expect(admin.getByText("••••••0009")).toBeVisible();
+  await admin.locator("summary").filter({ hasText: "Suspender cuenta" }).click();
+  await admin.getByRole("button", { name: "Confirmar suspensión" }).click();
+  await expect(admin.getByText("Cuenta suspendida", { exact: true })).toBeVisible();
+  await page.goto(`${stack.nextUrl}/cuenta`);
+  await expect(page.locator("#login-email")).toBeVisible();
+  await admin.locator("summary").filter({ hasText: "Reactivar cuenta" }).click();
+  await admin.getByRole("button", { name: "Confirmar reactivación" }).click();
+  await expect(admin.getByText("Cuenta verificada", { exact: true })).toBeVisible();
+  await page.goto(`${stack.nextUrl}/cuenta`);
+  await expect(page.locator("#login-email")).toBeVisible();
+
+  await admin.goto(`${stack.nextUrl}/admin/catalogo/demo-arroz`);
+  await admin.getByLabel("Descripción").fill("Descripción editorial de prueba.");
+  await admin.getByLabel("Destacado en inicio").check();
+  await admin.getByRole("button", { name: "Guardar ficha editorial" }).click();
+  await expect(admin.getByText("Ficha editorial guardada.")).toBeVisible();
+  await page.goto(`${stack.nextUrl}/producto/arroz-de-prueba`);
+  await expect(page.getByText("Descripción editorial de prueba.")).toBeVisible();
+  await page.goto(stack.nextUrl);
+  await expect(page.getByRole("heading", { name: "Productos destacados" })).toBeVisible();
+  await admin.getByLabel("Visible en el catálogo").uncheck();
+  await admin.getByRole("button", { name: "Guardar ficha editorial" }).click();
+  await expect.poll(async () => (await stack.db.query("select visible from public.product_editorial where product_id='demo-arroz'")).rows[0].visible).toBe(false);
+  assert.equal((await page.goto(`${stack.nextUrl}/producto/arroz-de-prueba`))?.status(), 404);
+  await page.goto(`${stack.nextUrl}/catalogo`);
+  await expect(page.getByRole("link", { name: "Arroz de prueba" })).toHaveCount(0);
+  await admin.locator("input[name=images]").setInputFiles([
+    { name: "prueba.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg></svg>") },
+    { name: "prueba-falsa.png", mimeType: "image/png", buffer: Buffer.from("contenido de prueba") },
+  ]);
+  await admin.getByLabel("Texto alternativo · prueba.svg").fill("Foto no admitida");
+  await admin.getByLabel("Texto alternativo · prueba-falsa.png").fill("Foto dañada");
+  await admin.getByRole("button", { name: "Subir fotos" }).click();
+  await expect(admin.getByText(/Imagen 1.*Usa un archivo/)).toBeVisible();
+  await expect(admin.getByText(/Imagen 2.*contenido del archivo/)).toBeVisible();
+  const bannerId = (await stack.db.query<{ id: string }>(`insert into public.banners(
+    location,title,desktop_path,mobile_path,alt_text,destination,starts_at,ends_at,enabled)
+    values('home','Campaña simulada',$1,$2,'Pieza editorial de prueba','/producto/arroz-de-prueba',now()-interval '1 hour',now()+interval '1 hour',true) returning id`,
+    [`${randomUUID()}.webp`, `${randomUUID()}.webp`])).rows[0].id;
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(stack.nextUrl);
+  const campaign = page.getByRole("article").filter({ hasText: "Campaña simulada" });
+  await expect(campaign.getByText("Campaña simulada")).toBeVisible();
+  await expect(campaign.getByRole("link")).toHaveCount(0);
+  const mobile = await campaign.locator("source").getAttribute("srcset");
+  await expect.poll(() => campaign.locator("img").evaluate((element: HTMLImageElement) => element.currentSrc)).toContain(mobile);
+  await admin.goto(`${stack.nextUrl}/admin/banners`);
+  await admin.locator("summary").filter({ hasText: "Campaña simulada" }).click();
+  const existingBanner = admin.locator("details").filter({ hasText: "Campaña simulada" });
+  await expect(existingBanner.getByRole("region", { name: "Vista previa de la pieza" })).toBeVisible();
+  await existingBanner.getByLabel("Activar publicación durante la vigencia").uncheck();
+  await existingBanner.getByRole("button", { name: "Guardar pieza" }).click();
+  await expect.poll(async () => (await stack.db.query("select enabled from public.banners where id=$1", [bannerId])).rows[0].enabled).toBe(false);
+  await page.reload();
+  await expect(campaign).toHaveCount(0);
+
+  await admin.goto(`${stack.nextUrl}/admin/contenido/preguntas-frecuentes`);
+  await admin.locator("#cms-title").fill("FAQ de demostración");
+  await admin.getByLabel("Contenido", { exact: true }).fill("<script>fixture de prueba</script>");
+  await admin.locator("textarea[name=pairs]").fill("¿Es un pedido real? | Es un pedido de prueba.");
+  await admin.getByLabel("Título para buscadores").fill("SEO de demostración");
+  await admin.getByRole("button", { name: "Guardar borrador" }).click();
+  const preview = admin.getByRole("region", { name: "Vista previa del borrador" });
+  await expect(preview.getByText("¿Es un pedido real?")).toBeVisible();
+  await page.goto(`${stack.nextUrl}/preguntas-frecuentes`);
+  await expect(page.getByText("¿Es un pedido real?")).toHaveCount(0);
+  await admin.getByRole("button", { name: "Publicar", exact: true }).click();
+  await expect(admin.getByText("Página publicada.", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "FAQ de demostración" })).toBeVisible();
+  await expect(page.getByText("<script>fixture de prueba</script>", { exact: true })).toBeVisible();
+  await expect(page.locator("script").filter({ hasText: /^fixture de prueba$/ })).toHaveCount(0);
+  await expect(page).toHaveTitle(/SEO de demostración/);
+
+  await admin.goto(`${stack.nextUrl}/admin/analitica`);
+  await admin.getByLabel("Período").selectOption("anio");
+  await admin.getByRole("button", { name: "Aplicar", exact: true }).click();
+  await expect(admin.getByText("Ventas netas", { exact: true })).toBeVisible();
+  await expect(admin.getByText("Presentaciones más vendidas", { exact: true })).toBeVisible();
+  await expect(admin.getByText("demo-arroz-1-kg · 1 unidades")).toBeVisible();
+  await expect(admin.getByText("Cancelado", { exact: true })).toBeVisible();
+  await expect(admin.getByText("Conversión de envío", { exact: true })).toBeVisible();
+  await page.goto(`${stack.nextUrl}/admin/analitica`);
+  await expect(page.getByRole("heading", { name: "Ventas de caja" })).toHaveCount(0);
+  await admin.goto(`${stack.nextUrl}/admin/inventario`);
+  await expect(admin.getByText("Inventario simulado de demostración.")).toBeVisible();
+  await expect(admin.getByText(/Valoración total.*No disponible/)).toBeVisible();
+  await expect(admin.getByText("Existencia · 0 · Agotado")).toBeVisible();
+  await expect(admin.getByText("Existencia · No confirmada", { exact: true })).toBeVisible();
+  await admin.getByLabel("Existencia", { exact: false }).selectOption("bajo");
+  await admin.getByLabel("Límite para stock bajo").fill("4");
+  await admin.getByRole("button", { name: "Aplicar", exact: true }).click();
+  await expect(admin.getByText("Existencia · 3 · Bajo")).toBeVisible();
+  await expect(admin.getByText("Existencia · 0 · Agotado")).toHaveCount(0);
+  await page.goto(`${stack.nextUrl}/admin/inventario`);
+  await expect(page.getByRole("heading", { name: "Inventario", exact: true })).toHaveCount(0);
+});
 
 test("SPEC-006 registration creates one pending account with Supabase Auth and PostgreSQL", {
   skip: !nativeAuthBinary || !nativeRestBinary, timeout: 90_000,
@@ -47,7 +314,7 @@ test("SPEC-006 registration creates one pending account with Supabase Auth and P
   assert.ok(stack.messages.some((mail) => mail.addresses.includes(email)));
 });
 
-test("SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 and SPEC-020 validate the demo checkout flow", {
+test("SPEC-008, SPEC-016 to SPEC-020 and SPEC-030 validate checkout and operating configuration", {
   skip: !nativeAuthBinary || !nativeRestBinary, timeout: 90_000,
 }, async (t) => {
   const stack = await startLocalStack(t, { resendSeconds: 0 });
@@ -84,7 +351,11 @@ test("SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 and SPEC-020 validate the
   await expect(client.getByText(denial)).toBeVisible();
   await submitLogin(client, email, "contraseña incorrecta");
   await expect(client.getByText(denial)).toBeVisible();
-  await client.evaluate((key) => localStorage.setItem(key, JSON.stringify([{ variantId: "demo-arroz-1-kg", quantity: 2 }])), guestCartKey);
+  await client.goto(`${stack.nextUrl}/producto/arroz-de-prueba`);
+  await client.getByRole("combobox", { name: /Presentación/ }).selectOption("demo-arroz-1-kg");
+  await client.getByRole("spinbutton", { name: /Cantidad/ }).fill("2");
+  await client.getByRole("button", { name: /Agregar al carrito/ }).click();
+  await expect(client.getByText("Producto agregado al carrito de prueba.")).toBeVisible();
   await submitLogin(client, email, previousPassword, "?volver=/carrito");
   try {
     await expect(client).toHaveURL(`${stack.nextUrl}/carrito`);
@@ -124,6 +395,14 @@ test("SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 and SPEC-020 validate the
   await pause.getByLabel("Aviso al cliente").fill("Pausa temporal de demostración.");
   await pause.getByRole("button", { name: "Guardar" }).click();
   await expect(pause.getByText("Calendario actualizado.")).toBeVisible();
+  await expect(client.getByText("Configuración general", { exact: false }).first()).toBeVisible();
+  const weekday = client.locator("details").filter({ hasText: "Domingo" });
+  await weekday.locator("summary").click();
+  await weekday.locator('input[name="web_close"]').fill("12:45");
+  await weekday.getByRole("button", { name: /Guardar/ }).click();
+  await expect(weekday.getByText("Calendario actualizado.")).toBeVisible();
+  await recovery.goto(`${stack.nextUrl}/horarios`);
+  await expect(recovery.getByText("Recepción web · 07:00–12:45")).toBeVisible();
   await recovery.goto(`${stack.nextUrl}/horarios`);
   await expect(recovery.getByText("Pausa temporal de demostración.")).toBeVisible();
   const capacity = client.getByRole("form", { name: "Capacidad de retiro" });
@@ -156,6 +435,12 @@ test("SPEC-008, SPEC-016, SPEC-017, SPEC-018, SPEC-019 and SPEC-020 validate the
     assert.equal((await stack.db.query("select 1 from public.cart_items")).rowCount, 0);
     await client.reload();
     await expect(client.getByText("Pedido de prueba registrado.")).toBeVisible();
+    const visit = await client.evaluate(() => sessionStorage.getItem("mi-comercio:visita-demo"));
+    assert.ok(visit);
+    await expect.poll(async () => (await stack.db.query(
+      "select kind from public.demo_funnel_events where visitor=md5($1) order by kind", [visit],
+    )).rows.map(({ kind }) => kind)).toEqual(expect.arrayContaining(["visit", "product", "add", "signin", "slot", "submit", "accepted"]));
+    assert.equal((await stack.db.query("select 1 from public.demo_submission_intents")).rowCount, 1);
   } else {
     t.diagnostic("La prueba SQL cubre pedidos con horario fijo. La hora local no deja una franja de prueba en esta ejecución.");
   }

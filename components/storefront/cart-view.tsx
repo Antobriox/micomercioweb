@@ -1,5 +1,6 @@
 "use client";
 
+import { recordFunnelEvent } from "../../lib/analytics/demo-funnel";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 
@@ -53,6 +54,9 @@ function CartLine({ line, item, change, disabled }: {
 export function CartView() {
   const raw = useSyncExternalStore(subscribeToGuestCart, guestCartSnapshot, () => null);
   const account = useSyncExternalStore(subscribeToAccountCart, accountCartSnapshot, initialAccountCart);
+  useEffect(() => {
+    if (account.mode === "account") recordFunnelEvent("signin");
+  }, [account.mode]);
   const guest = parseGuestCart(raw);
   const lines = account.mode === "account" ? account.lines : guest;
   const key = JSON.stringify(lines.map(({ variantId }) => variantId));
@@ -96,11 +100,14 @@ export function CartView() {
       setPending(true);
       const status = await changeAccountCart("set", id, quantity, crypto.randomUUID());
       setPending(false);
+      if (status === "saved" && quantity === 0) recordFunnelEvent("remove");
       if (status !== "saved") setMessage(status === "expired" ? "Tu sesión expiró. Tu carrito de cuenta sigue guardado." :
         "El cambio no se confirmó. Las líneas permanecen guardadas.");
       return;
     }
-    if (setGuestCartQuantity(id, quantity, limit) !== "saved") setMessage("El navegador no pudo guardar el cambio.");
+    const status = setGuestCartQuantity(id, quantity, limit);
+    if (status !== "saved") setMessage("El navegador no pudo guardar el cambio.");
+    else if (quantity === 0) recordFunnelEvent("remove");
   }
 
   if (!lines.length && account.mode === "loading") return <p role="status">Cargando carrito.</p>;

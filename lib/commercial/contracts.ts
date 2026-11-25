@@ -1,3 +1,5 @@
+import type { CatalogPhoto } from "./demo-editorial";
+
 export type DatumSource = "simulated" | "picking";
 
 export interface Money {
@@ -30,6 +32,7 @@ export interface Product {
   name: string;
   brand: string;
   categoryId: string;
+  editorial?: { categoryTitle: string | null; description: string | null; featured: boolean; photos: readonly CatalogPhoto[] };
   variants: readonly Variant[];
 }
 
@@ -46,6 +49,7 @@ export interface Sale {
   register: string | null;
   cashier: string | null;
   kind: "sale" | "return";
+  lines?: readonly { variantId: string; quantity: number }[];
 }
 
 export interface SalesPeriod {
@@ -61,9 +65,9 @@ export interface CommercialSnapshot<T> {
 
 export interface CommercialAdapter {
   source: DatumSource;
-  readCatalog(): Promise<CommercialSnapshot<Product>>;
-  readInventory(): Promise<CommercialSnapshot<InventoryEntry>>;
-  readSales(period: SalesPeriod): Promise<CommercialSnapshot<Sale>>;
+  readCatalog(signal?: AbortSignal): Promise<CommercialSnapshot<Product>>;
+  readInventory(signal?: AbortSignal): Promise<CommercialSnapshot<InventoryEntry>>;
+  readSales(period: SalesPeriod, signal?: AbortSignal): Promise<CommercialSnapshot<Sale>>;
 }
 
 export type CommercialRead<T> =

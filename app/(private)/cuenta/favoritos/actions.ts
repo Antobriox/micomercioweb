@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getCurrentAccount } from "../../../../lib/server/account";
-import { commercial } from "../../../../lib/server/commercial";
+import { getStorefrontCatalog } from "../../../../lib/server/commercial/storefront";
 
 export async function setFavorite(_previous: string, fields: FormData) {
   const account = await getCurrentAccount();
@@ -14,7 +14,7 @@ export async function setFavorite(_previous: string, fields: FormData) {
     (intent !== "remove" && intent !== "save")) return "Producto no disponible.";
 
   if (intent === "save") {
-    const catalog = await commercial.getCatalog();
+    const catalog = await getStorefrontCatalog();
     if (!("records" in catalog) || !catalog.records.some(({ id }) => id === product)) {
       return "El producto ya no está disponible para guardar.";
     }

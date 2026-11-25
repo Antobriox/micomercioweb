@@ -96,8 +96,9 @@ export function createSimulatedAdapter(now = () => new Date()): CommercialAdapte
     })),
   );
   const sales: readonly Sale[] = [
-    { id: "demo-venta-01", occursAt: timestamp(-48 * hour), total: money(480), register: null, cashier: null, kind: "sale" },
-    { id: "demo-devolucion-01", occursAt: timestamp(-24 * hour), total: money(180), register: null, cashier: null, kind: "return" },
+    { id: "demo-venta-01", occursAt: timestamp(-48 * hour), total: money(480), register: "Caja de prueba", cashier: "Usuario de prueba", kind: "sale",
+      lines: [{ variantId: "demo-arroz-1-kg", quantity: 1 }, { variantId: "demo-arroz-5-kg", quantity: 1 }] },
+    { id: "demo-devolucion-01", occursAt: timestamp(-24 * hour), total: money(180), register: "Caja de prueba", cashier: "Usuario de prueba", kind: "return" },
   ];
 
   function snapshot<T>(records: readonly T[]): CommercialSnapshot<T> {

@@ -10,20 +10,22 @@ import { demoEditorial } from "../../../../lib/commercial/demo-editorial";
 import { readSearchReturn } from "../../../../lib/commercial/search";
 import { recommendProducts } from "../../../../lib/commercial/recommendations";
 import { getCurrentAccount } from "../../../../lib/server/account";
-import { commercial } from "../../../../lib/server/commercial";
+import { getStorefrontCatalog } from "../../../../lib/server/commercial/storefront";
 
 export default async function ProductPage({ params, searchParams }: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ volver?: string | string[] }>;
 }) {
   const [{ slug }, { volver }] = await Promise.all([params, searchParams]);
-  const catalog = await commercial.getCatalog();
+  const catalog = await getStorefrontCatalog();
   if (!("records" in catalog)) {
     return <StorePage title="Producto no disponible"><Notice tone="error">El catálogo no está disponible.</Notice><TextLink href="/catalogo">Volver al catálogo</TextLink></StorePage>;
   }
   const product = catalog.records.find((record) => record.slug === slug);
   if (!product) notFound();
-  const editorial = catalog.source === "simulated" ? demoEditorial(product.id) : undefined;
+  const demo = catalog.source === "simulated" ? demoEditorial(product.id) : undefined;
+  const photos = product.editorial?.photos.length ? product.editorial.photos : demo?.photos ?? [];
+  const description = product.editorial?.description ?? demo?.description;
   const related = catalog.state === "available" ? recommendProducts(product, catalog.records) : [];
   const account = await getCurrentAccount();
   const favorite = account && await account.client.from("favorites").select("product_id")
@@ -31,7 +33,7 @@ export default async function ProductPage({ params, searchParams }: {
   const returnUrl = readSearchReturn(volver);
   const parents = [
     { label: "Catálogo", href: "/catalogo" },
-    { label: categoryName(product.categoryId), href: `/catalogo?categoria=${encodeURIComponent(product.categoryId)}` },
+    { label: product.editorial?.categoryTitle ?? categoryName(product.categoryId), href: `/catalogo?categoria=${encodeURIComponent(product.categoryId)}` },
   ];
   return (
     <StorePage title={product.name} parents={parents}>
@@ -41,10 +43,10 @@ export default async function ProductPage({ params, searchParams }: {
       {account ? favorite && (favorite.error ? <Notice tone="warning">Tus favoritos no están disponibles.</Notice> :
         <FavoriteButton productId={product.id} saved={!!favorite.data} />) :
         <TextLink className="mb-3" href={{ pathname: "/acceso", query: { volver: `/producto/${slug}` } }}>Inicia sesión para guardar en favoritos</TextLink>}
-      <ProductPurchase key={product.id} variants={product.variants} photos={editorial?.photos ?? []} canAdd={catalog.state === "available"} signedIn={!!account} />
+      <ProductPurchase key={product.id} variants={product.variants} photos={photos} canAdd={catalog.state === "available"} signedIn={!!account} />
       <section className="mt-6" aria-labelledby="product-description">
         <h2 id="product-description" className="mb-2 text-xl font-bold">Descripción</h2>
-        <p>{editorial?.description ?? "Descripción no disponible."}</p>
+        <p>{description ?? "Descripción no disponible."}</p>
       </section>
       {related.length > 0 && <section className="mt-8" aria-labelledby="related-products">
         <h2 id="related-products" className="mb-4 text-xl font-bold">Productos relacionados</h2>
